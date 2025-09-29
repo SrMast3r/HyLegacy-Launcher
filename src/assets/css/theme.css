@@ -22,3 +22,13 @@
     --shadow: rgba(208, 208, 208, 0.7);
     --svg-color: brightness(0) saturate(100%) invert(0%) sepia(5%) saturate(1719%) hue-rotate(357deg) brightness(94%) contrast(84%);
 }
+
+.cartoon {
+    --color: #333333;
+    --background: #f0e4d7;
+    --background-element: #d4bda5;
+    --background-transparent: rgba(240, 228, 215, 0.8);
+    --shadow: rgba(0, 0, 0, 0.1);
+    --element-color: #ff6f61;
+    --svg-color: brightness(0) saturate(100%) invert(20%) sepia(0%) saturate(7500%) hue-rotate(32deg) brightness(95%) contrast(105%);
+}
