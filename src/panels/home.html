@@ -1,6 +1,6 @@
 <!-- src/panels/home.html -->
 <div class="container">
-    <!-- Barra superior centrada: Nombre de la instancia | Jugadores -->
+    <!-- Barra superior: Nombre de instancia | jugadores -->
     <div class="status-server" role="status" aria-live="polite">
         <div class="status-center">
             <span class="server-status-name">Nombre de la instancia</span>
@@ -9,11 +9,10 @@
         </div>
     </div>
 
-
     <!-- Contenido principal -->
     <div class="home-bottom">
         <div class="new-tab">
-            <!-- HERO: imagen grande de la instancia -->
+            <!-- HERO principal de la instancia seleccionada -->
             <div class="instance-hero" role="img" aria-label="Instancia seleccionada">
                 <div class="instance-hero__overlay"></div>
                 <div class="instance-hero__content">
@@ -27,9 +26,8 @@
         </div>
     </div>
 
-    <!-- BARRA INFERIOR: Skin | Nickname | Jugar | Opciones -->
+    <!-- Barra inferior: Skin | Nick | Jugar | Opciones -->
     <div class="sidebar" role="toolbar">
-        <!-- Izquierda: avatar + nickname -->
         <div class="player-slot">
             <div class="player-head" aria-label="Avatar del jugador"></div>
             <div class="player-meta">
@@ -38,30 +36,29 @@
             </div>
         </div>
 
-        <!-- Centro: botón Jugar -->
         <div class="play-zone">
             <div class="play-instance">
                 <button class="play-btn" aria-label="Jugar">Jugar</button>
                 <div class="instance-select" title="Cambiar instancia" aria-label="Cambiar instancia" role="button" tabindex="0">▾</div>
             </div>
+
             <div class="info-starting-game">
                 <div class="info-starting-game-text">Conectando…</div>
                 <progress value="0" max="0" class="progress-bar"></progress>
             </div>
         </div>
 
-        <!-- Derecha: opciones -->
         <div class="options-slot">
             <div class="settings-btn" title="Ajustes" role="button" aria-label="Ajustes">⚙</div>
         </div>
     </div>
 
-    <!-- Popup selección de instancias -->
-    <div class="instance-popup">
-        <div class="instances-tab">
-            <div class="close-popup" title="Cerrar">✕</div>
+    <!-- Popup: selector de instancias -->
+    <div class="instance-popup" aria-hidden="true">
+        <div class="instances-tab" role="dialog" aria-label="Elige tu instancia">
+            <div class="close-popup" title="Cerrar" role="button" tabindex="0">✕</div>
             <p>Elige tu instancia…</p>
-            <div class="instances-List"></div>
+            <div class="instances-List content-scroll" aria-live="polite"></div>
         </div>
     </div>
 </div>

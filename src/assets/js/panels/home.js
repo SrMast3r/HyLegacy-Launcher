@@ -17,12 +17,13 @@ class Home {
         this.db = new database();
 
         this.$ = {
-            // hero
+            // Hero
             instanceHero: document.querySelector('.instance-hero'),
             instanceHeroName: document.querySelector('.instance-hero__name'),
             chipLoader: document.querySelector('.chip--loader'),
             chipVersion: document.querySelector('.chip--version'),
-            // bottom bar
+
+            // Barra inferior
             playerHead: document.querySelector('.player-head'),
             playerNick: document.querySelector('.player-nick'),
             playInstanceBtn: document.querySelector('.play-instance'),
@@ -38,56 +39,35 @@ class Home {
 
         this.$.settingsBtn?.addEventListener('click', () => changePanel('settings'));
 
-        await this.populatePlayerInfo();   // ← pone nickname y skin
+        await this.populatePlayerInfo();
         await this.setupInstanceSelector();
     }
 
-    /* ===== Player info (nickname/skin) ===== */
+    /* ===== Info jugador ===== */
     async populatePlayerInfo() {
         const cfg = await this.db.readData('configClient');
         const acc = await this.db.readData('accounts', cfg?.account_selected);
         const nick = acc?.name || acc?.username || acc?.profile?.name || 'Jugador';
         if (this.$.playerNick) this.$.playerNick.textContent = nick;
-
-        // Si ya tienes util de skin en utils, úsala; aquí solo dejamos el div preparado.
-        // (tu proceso actual ya pinta la cabeza al loguear; si no, añade aquí el set background)
+        // La cabeza ya la pinta tu flujo de login con utils.headplayer()
     }
 
-    /* ================= HERO ================= */
+    /* ====== Helpers ====== */
+    getInstanceImage(inst) {
+        return (
+            inst?.assets?.hero ||
+            inst?.images?.hero ||
+            inst?.hero ||
+            inst?.banner ||
+            inst?.image ||
+            'assets/images/instance-default.jpg'
+        );
+    }
+
     renderHero(inst) {
-        if (!this.$.instanceHero) return;
-
-        const sources = [
-            inst?.assets?.hero,
-            inst?.images?.hero,
-            inst?.hero,
-            inst?.banner,
-            inst?.image
-        ].filter(Boolean);
-
-        const FALLBACK = 'assets/images/instance-default.jpg';
-
-        const preload = (src, timeout = 8000) => new Promise((res, rej) => {
-            if (!src) return rej();
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            const t = setTimeout(() => { img.onload = img.onerror = null; rej(); }, timeout);
-            img.onload = () => { clearTimeout(t); res(src); };
-            img.onerror = () => { clearTimeout(t); rej(); };
-            img.src = src;
-        });
-
-        const tryChain = async (i = 0) => {
-            const src = sources[i] || FALLBACK;
-            try {
-                const ok = await preload(src);
-                this.$.instanceHero.style.backgroundImage = `url('${ok}')`;
-            } catch {
-                if (i < sources.length) return tryChain(i + 1);
-                this.$.instanceHero.style.backgroundImage = `url('${FALLBACK}')`;
-            }
-        };
-        tryChain();
+        if (!this.$.instanceHero || !inst) return;
+        const img = this.getInstanceImage(inst);
+        this.$.instanceHero.style.backgroundImage = `url('${img}')`;
 
         // Texto
         if (this.$.instanceHeroName) this.$.instanceHeroName.textContent = inst?.name ?? 'Instancia';
@@ -98,7 +78,7 @@ class Home {
         if (this.$.chipVersion) this.$.chipVersion.textContent = `MC ${mcVersion}`;
     }
 
-    /* ================= Selector de instancias ================= */
+    /* ===== Selector de instancias ===== */
     async setupInstanceSelector() {
         const cfg = await this.db.readData('configClient');
         const auth = await this.db.readData('accounts', cfg?.account_selected);
@@ -128,10 +108,18 @@ class Home {
         this.$.instanceSelectBtn?.addEventListener('click', () => {
             this.renderInstancePopup(instances, chosen, auth?.name);
             this.$.instancePopup.style.display = 'flex';
-            this.$.instancesListPopup.querySelector('.instance-elements')?.focus();
+            this.$.instancePopup.setAttribute('aria-hidden', 'false');
+            this.$.instancesListPopup.querySelector('.instance-card')?.focus();
         });
 
-        this.$.instanceCloseBtn?.addEventListener('click', () => { this.$.instancePopup.style.display = 'none'; });
+        const closePopup = () => {
+            this.$.instancePopup.style.display = 'none';
+            this.$.instancePopup.setAttribute('aria-hidden', 'true');
+        };
+        this.$.instanceCloseBtn?.addEventListener('click', closePopup);
+        this.$.instancePopup?.addEventListener('click', (e) => {
+            if (e.target.classList.contains('instance-popup')) closePopup();
+        });
 
         this.$.playInstanceBtn?.addEventListener('click', (e) => {
             if (e.target.closest('.instance-select')) return;
@@ -154,43 +142,79 @@ class Home {
         list.innerHTML = '';
 
         const canUse = (inst) => !inst.whitelistActive || inst.whitelist?.includes(playerName);
+
         for (const inst of instances) {
             if (!canUse(inst)) continue;
-            const div = document.createElement('div');
-            div.id = inst.name;
-            div.className = `instance-elements${inst.name === chosen?.name ? ' active-instance' : ''}`;
-            div.setAttribute('tabindex', '0');
-            div.setAttribute('role', 'button');
-            div.textContent = inst.name;
-            list.appendChild(div);
+
+            const card = document.createElement('div');
+            card.className = `instance-card${inst.name === chosen?.name ? ' active' : ''}`;
+            card.id = inst.name;
+            card.tabIndex = 0;
+            card.style.backgroundImage = `url('${this.getInstanceImage(inst)}')`;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'instance-card__overlay';
+
+            const content = document.createElement('div');
+            content.className = 'instance-card__content';
+
+            const name = document.createElement('div');
+            name.className = 'instance-card__name';
+            name.textContent = inst.name;
+
+            const chips = document.createElement('div');
+            chips.className = 'instance-card__chips';
+
+            const chipLoader = document.createElement('span');
+            chipLoader.className = 'chip';
+            chipLoader.textContent = (inst?.loadder?.loadder_type || 'Vanilla') +
+                (inst?.loadder?.loadder_version ? ` ${inst.loadder.loadder_version}` : '');
+
+            const chipVersion = document.createElement('span');
+            chipVersion.className = 'chip';
+            chipVersion.textContent = `MC ${inst?.loadder?.minecraft_version || '—'}`;
+
+            chips.appendChild(chipLoader);
+            chips.appendChild(chipVersion);
+
+            content.appendChild(name);
+            content.appendChild(chips);
+
+            card.appendChild(overlay);
+            card.appendChild(content);
+            list.appendChild(card);
         }
 
         const choose = async (name) => {
             const cfg = await this.db.readData('configClient');
             const newInst = instances.find(i => i.name === name);
             if (!newInst) return;
+
             cfg.instance_selct = newInst.name;
             await this.db.updateData('configClient', cfg);
             await setStatus(newInst.status);
             this.renderHero(newInst);
-            list.querySelectorAll('.instance-elements').forEach(n => n.classList.remove('active-instance'));
-            list.querySelector(`#${CSS.escape(name)}`)?.classList.add('active-instance');
+
+            list.querySelectorAll('.instance-card').forEach(n => n.classList.remove('active'));
+            list.querySelector(`#${CSS.escape(name)}`)?.classList.add('active');
+
             this.$.instancePopup.style.display = 'none';
+            this.$.instancePopup.setAttribute('aria-hidden', 'true');
         };
 
         list.onclick = (e) => {
-            const el = e.target.closest('.instance-elements');
+            const el = e.target.closest('.instance-card');
             if (el) choose(el.id);
         };
         list.onkeydown = (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
-                const el = e.target.closest('.instance-elements');
-                if (el) choose(el.id);
+                const el = e.target.closest('.instance-card');
+                if (el) { e.preventDefault(); choose(el.id); }
             }
         };
     }
 
-    /* ================= Lanzamiento ================= */
+    /* ===== Lanzamiento ===== */
     async startGame() {
         const launch = new Launch();
         const configClient = await this.db.readData('configClient');
@@ -300,7 +324,7 @@ class Home {
         });
     }
 
-    /* ================= Utils ================= */
+    /* ===== Utils menores ===== */
     fmtDate(e) {
         const date = new Date(e);
         const allMonth = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
