@@ -1,348 +1,316 @@
 /**
  * @author Luuxis
- * Luuxis License v1.0 (voir fichier LICENSE pour les détails en FR/EN)
+ * @license Luuxis License v1.0
  */
-import { config, database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js'
+
+import config from '../utils/config.js'
+import { database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js'
 
 const { Launch } = require('minecraft-java-core')
-const { shell, ipcRenderer } = require('electron')
+const { ipcRenderer } = require('electron')
 
 class Home {
-    static id = "home";
-    async init(config) {
-        this.config = config;
+    static id = 'home';
+
+    async init(configIn) {
+        this.config = configIn;
         this.db = new database();
-        this.news()
-        this.socialLick()
-        this.instancesSelect()
-        document.querySelector('.settings-btn').addEventListener('click', e => changePanel('settings'))
+
+        this.$ = {
+            // hero
+            instanceHero: document.querySelector('.instance-hero'),
+            instanceHeroName: document.querySelector('.instance-hero__name'),
+            chipLoader: document.querySelector('.chip--loader'),
+            chipVersion: document.querySelector('.chip--version'),
+            // bottom bar
+            playerHead: document.querySelector('.player-head'),
+            playerNick: document.querySelector('.player-nick'),
+            playInstanceBtn: document.querySelector('.play-instance'),
+            instanceSelectBtn: document.querySelector('.instance-select'),
+            instancePopup: document.querySelector('.instance-popup'),
+            instancesListPopup: document.querySelector('.instances-List'),
+            instanceCloseBtn: document.querySelector('.close-popup'),
+            infoBox: document.querySelector('.info-starting-game'),
+            infoText: document.querySelector('.info-starting-game-text'),
+            progressBar: document.querySelector('.progress-bar'),
+            settingsBtn: document.querySelector('.settings-btn'),
+        };
+
+        this.$.settingsBtn?.addEventListener('click', () => changePanel('settings'));
+
+        await this.populatePlayerInfo();   // ← pone nickname y skin
+        await this.setupInstanceSelector();
     }
 
-    async news() {
-        let newsElement = document.querySelector('.news-list');
-        let news = await config.getNews().then(res => res).catch(err => false);
-        if (news) {
-            if (!news.length) {
-                let blockNews = document.createElement('div');
-                blockNews.classList.add('news-block');
-                blockNews.innerHTML = `
-                    <div class="news-header">
-                        <img class="server-status-icon" src="assets/images/icon.png">
-                        <div class="header-text">
-                            <div class="title">Aucun news n'ai actuellement disponible.</div>
-                        </div>
-                        <div class="date">
-                            <div class="day">1</div>
-                            <div class="month">Janvier</div>
-                        </div>
-                    </div>
-                    <div class="news-content">
-                        <div class="bbWrapper">
-                            <p>Vous pourrez suivre ici toutes les news relative au serveur.</p>
-                        </div>
-                    </div>`
-                newsElement.appendChild(blockNews);
-            } else {
-                for (let News of news) {
-                    let date = this.getdate(News.publish_date)
-                    let blockNews = document.createElement('div');
-                    blockNews.classList.add('news-block');
-                    blockNews.innerHTML = `
-                        <div class="news-header">
-                            <img class="server-status-icon" src="assets/images/icon.png">
-                            <div class="header-text">
-                                <div class="title">${News.title}</div>
-                            </div>
-                            <div class="date">
-                                <div class="day">${date.day}</div>
-                                <div class="month">${date.month}</div>
-                            </div>
-                        </div>
-                        <div class="news-content">
-                            <div class="bbWrapper">
-                                <p>${News.content.replace(/\n/g, '</br>')}</p>
-                                <p class="news-author">Auteur - <span>${News.author}</span></p>
-                            </div>
-                        </div>`
-                    newsElement.appendChild(blockNews);
-                }
+    /* ===== Player info (nickname/skin) ===== */
+    async populatePlayerInfo() {
+        const cfg = await this.db.readData('configClient');
+        const acc = await this.db.readData('accounts', cfg?.account_selected);
+        const nick = acc?.name || acc?.username || acc?.profile?.name || 'Jugador';
+        if (this.$.playerNick) this.$.playerNick.textContent = nick;
+
+        // Si ya tienes util de skin en utils, úsala; aquí solo dejamos el div preparado.
+        // (tu proceso actual ya pinta la cabeza al loguear; si no, añade aquí el set background)
+    }
+
+    /* ================= HERO ================= */
+    renderHero(inst) {
+        if (!this.$.instanceHero) return;
+
+        const sources = [
+            inst?.assets?.hero,
+            inst?.images?.hero,
+            inst?.hero,
+            inst?.banner,
+            inst?.image
+        ].filter(Boolean);
+
+        const FALLBACK = 'assets/images/instance-default.jpg';
+
+        const preload = (src, timeout = 8000) => new Promise((res, rej) => {
+            if (!src) return rej();
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            const t = setTimeout(() => { img.onload = img.onerror = null; rej(); }, timeout);
+            img.onload = () => { clearTimeout(t); res(src); };
+            img.onerror = () => { clearTimeout(t); rej(); };
+            img.src = src;
+        });
+
+        const tryChain = async (i = 0) => {
+            const src = sources[i] || FALLBACK;
+            try {
+                const ok = await preload(src);
+                this.$.instanceHero.style.backgroundImage = `url('${ok}')`;
+            } catch {
+                if (i < sources.length) return tryChain(i + 1);
+                this.$.instanceHero.style.backgroundImage = `url('${FALLBACK}')`;
             }
-        } else {
-            let blockNews = document.createElement('div');
-            blockNews.classList.add('news-block');
-            blockNews.innerHTML = `
-                <div class="news-header">
-                        <img class="server-status-icon" src="assets/images/icon.png">
-                        <div class="header-text">
-                            <div class="title">Error.</div>
-                        </div>
-                        <div class="date">
-                            <div class="day">1</div>
-                            <div class="month">Janvier</div>
-                        </div>
-                    </div>
-                    <div class="news-content">
-                        <div class="bbWrapper">
-                            <p>Impossible de contacter le serveur des news.</br>Merci de vérifier votre configuration.</p>
-                        </div>
-                    </div>`
-            newsElement.appendChild(blockNews);
-        }
+        };
+        tryChain();
+
+        // Texto
+        if (this.$.instanceHeroName) this.$.instanceHeroName.textContent = inst?.name ?? 'Instancia';
+        const loaderType = inst?.loadder?.loadder_type || 'Vanilla';
+        const loaderBuild = inst?.loadder?.loadder_version ? ` ${inst.loadder.loadder_version}` : '';
+        const mcVersion = inst?.loadder?.minecraft_version || '—';
+        if (this.$.chipLoader) this.$.chipLoader.textContent = (loaderType === 'none' ? 'Vanilla' : loaderType) + loaderBuild;
+        if (this.$.chipVersion) this.$.chipVersion.textContent = `MC ${mcVersion}`;
     }
 
-    socialLick() {
-        let socials = document.querySelectorAll('.social-block')
+    /* ================= Selector de instancias ================= */
+    async setupInstanceSelector() {
+        const cfg = await this.db.readData('configClient');
+        const auth = await this.db.readData('accounts', cfg?.account_selected);
 
-        socials.forEach(social => {
-            social.addEventListener('click', e => {
-                shell.openExternal(e.target.dataset.url)
-            })
+        if (!config || typeof config.getInstanceList !== 'function') {
+            console.error('[Home] config.getInstanceList no disponible');
+            return;
+        }
+
+        const instances = await config.getInstanceList();
+
+        let chosen = this.pickValidInstance(instances, cfg?.instance_selct, auth?.name);
+
+        if (!cfg || cfg.instance_selct !== chosen?.name) {
+            await this.db.updateData('configClient', { ...(cfg || {}), instance_selct: chosen?.name });
+        }
+        if (chosen) {
+            setStatus(chosen.status);
+            this.renderHero(chosen);
+        }
+
+        if (instances.length === 1) {
+            this.$.instanceSelectBtn?.classList.add('is-hidden');
+            this.$.playInstanceBtn && (this.$.playInstanceBtn.style.paddingRight = '0');
+        }
+
+        this.$.instanceSelectBtn?.addEventListener('click', () => {
+            this.renderInstancePopup(instances, chosen, auth?.name);
+            this.$.instancePopup.style.display = 'flex';
+            this.$.instancesListPopup.querySelector('.instance-elements')?.focus();
+        });
+
+        this.$.instanceCloseBtn?.addEventListener('click', () => { this.$.instancePopup.style.display = 'none'; });
+
+        this.$.playInstanceBtn?.addEventListener('click', (e) => {
+            if (e.target.closest('.instance-select')) return;
+            this.startGame();
         });
     }
 
-    async instancesSelect() {
-        let configClient = await this.db.readData('configClient')
-        let auth = await this.db.readData('accounts', configClient.account_selected)
-        let instancesList = await config.getInstanceList()
-        let instanceSelect = instancesList.find(i => i.name == configClient?.instance_selct) ? configClient?.instance_selct : null
-
-        let instanceBTN = document.querySelector('.play-instance')
-        let instancePopup = document.querySelector('.instance-popup')
-        let instancesListPopup = document.querySelector('.instances-List')
-        let instanceCloseBTN = document.querySelector('.close-popup')
-
-        if (instancesList.length === 1) {
-            document.querySelector('.instance-select').style.display = 'none'
-            instanceBTN.style.paddingRight = '0'
+    pickValidInstance(instances, desiredName, playerName) {
+        const byName = (n) => instances.find(i => i.name === n);
+        const canUse = (i) => !i.whitelistActive || i.whitelist?.includes(playerName);
+        if (desiredName) {
+            const inst = byName(desiredName);
+            if (inst && canUse(inst)) return inst;
         }
-
-        if (!instanceSelect) {
-            let newInstanceSelect = instancesList.find(i => i.whitelistActive == false)
-            let configClient = await this.db.readData('configClient')
-            configClient.instance_selct = newInstanceSelect.name
-            instanceSelect = newInstanceSelect.name
-            await this.db.updateData('configClient', configClient)
-        }
-
-        for (let instance of instancesList) {
-            if (instance.whitelistActive) {
-                let whitelist = instance.whitelist.find(whitelist => whitelist == auth?.name)
-                if (whitelist !== auth?.name) {
-                    if (instance.name == instanceSelect) {
-                        let newInstanceSelect = instancesList.find(i => i.whitelistActive == false)
-                        let configClient = await this.db.readData('configClient')
-                        configClient.instance_selct = newInstanceSelect.name
-                        instanceSelect = newInstanceSelect.name
-                        setStatus(newInstanceSelect.status)
-                        await this.db.updateData('configClient', configClient)
-                    }
-                }
-            } else console.log(`Initializing instance ${instance.name}...`)
-            if (instance.name == instanceSelect) setStatus(instance.status)
-        }
-
-        instancePopup.addEventListener('click', async e => {
-            let configClient = await this.db.readData('configClient')
-
-            if (e.target.classList.contains('instance-elements')) {
-                let newInstanceSelect = e.target.id
-                let activeInstanceSelect = document.querySelector('.active-instance')
-
-                if (activeInstanceSelect) activeInstanceSelect.classList.toggle('active-instance');
-                e.target.classList.add('active-instance');
-
-                configClient.instance_selct = newInstanceSelect
-                await this.db.updateData('configClient', configClient)
-                instanceSelect = instancesList.filter(i => i.name == newInstanceSelect)
-                instancePopup.style.display = 'none'
-                let instance = await config.getInstanceList()
-                let options = instance.find(i => i.name == configClient.instance_selct)
-                await setStatus(options.status)
-            }
-        })
-
-        instanceBTN.addEventListener('click', async e => {
-            let configClient = await this.db.readData('configClient')
-            let instanceSelect = configClient.instance_selct
-            let auth = await this.db.readData('accounts', configClient.account_selected)
-
-            if (e.target.classList.contains('instance-select')) {
-                instancesListPopup.innerHTML = ''
-                for (let instance of instancesList) {
-                    if (instance.whitelistActive) {
-                        instance.whitelist.map(whitelist => {
-                            if (whitelist == auth?.name) {
-                                if (instance.name == instanceSelect) {
-                                    instancesListPopup.innerHTML += `<div id="${instance.name}" class="instance-elements active-instance">${instance.name}</div>`
-                                } else {
-                                    instancesListPopup.innerHTML += `<div id="${instance.name}" class="instance-elements">${instance.name}</div>`
-                                }
-                            }
-                        })
-                    } else {
-                        if (instance.name == instanceSelect) {
-                            instancesListPopup.innerHTML += `<div id="${instance.name}" class="instance-elements active-instance">${instance.name}</div>`
-                        } else {
-                            instancesListPopup.innerHTML += `<div id="${instance.name}" class="instance-elements">${instance.name}</div>`
-                        }
-                    }
-                }
-
-                instancePopup.style.display = 'flex'
-            }
-
-            if (!e.target.classList.contains('instance-select')) this.startGame()
-        })
-
-        instanceCloseBTN.addEventListener('click', () => instancePopup.style.display = 'none')
+        return instances.find(canUse) || instances[0];
     }
 
+    renderInstancePopup(instances, chosen, playerName) {
+        const list = this.$.instancesListPopup;
+        list.innerHTML = '';
+
+        const canUse = (inst) => !inst.whitelistActive || inst.whitelist?.includes(playerName);
+        for (const inst of instances) {
+            if (!canUse(inst)) continue;
+            const div = document.createElement('div');
+            div.id = inst.name;
+            div.className = `instance-elements${inst.name === chosen?.name ? ' active-instance' : ''}`;
+            div.setAttribute('tabindex', '0');
+            div.setAttribute('role', 'button');
+            div.textContent = inst.name;
+            list.appendChild(div);
+        }
+
+        const choose = async (name) => {
+            const cfg = await this.db.readData('configClient');
+            const newInst = instances.find(i => i.name === name);
+            if (!newInst) return;
+            cfg.instance_selct = newInst.name;
+            await this.db.updateData('configClient', cfg);
+            await setStatus(newInst.status);
+            this.renderHero(newInst);
+            list.querySelectorAll('.instance-elements').forEach(n => n.classList.remove('active-instance'));
+            list.querySelector(`#${CSS.escape(name)}`)?.classList.add('active-instance');
+            this.$.instancePopup.style.display = 'none';
+        };
+
+        list.onclick = (e) => {
+            const el = e.target.closest('.instance-elements');
+            if (el) choose(el.id);
+        };
+        list.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const el = e.target.closest('.instance-elements');
+                if (el) choose(el.id);
+            }
+        };
+    }
+
+    /* ================= Lanzamiento ================= */
     async startGame() {
-        let launch = new Launch()
-        let configClient = await this.db.readData('configClient')
-        let instance = await config.getInstanceList()
-        let authenticator = await this.db.readData('accounts', configClient.account_selected)
-        let options = instance.find(i => i.name == configClient.instance_selct)
+        const launch = new Launch();
+        const configClient = await this.db.readData('configClient');
 
-        let playInstanceBTN = document.querySelector('.play-instance')
-        let infoStartingBOX = document.querySelector('.info-starting-game')
-        let infoStarting = document.querySelector(".info-starting-game-text")
-        let progressBar = document.querySelector('.progress-bar')
+        if (!config || typeof config.getInstanceList !== 'function') {
+            console.error('[Home] config.getInstanceList no disponible');
+            return;
+        }
 
-        let opt = {
+        const instances = await config.getInstanceList();
+        const authenticator = await this.db.readData('accounts', configClient.account_selected);
+        const options = instances.find(i => i.name === configClient.instance_selct);
+        if (!options) return;
+
+        const opt = {
             url: options.url,
-            authenticator: authenticator,
+            authenticator,
             timeout: 10000,
-            path: `${await appdata()}/${process.platform == 'darwin' ? this.config.dataDirectory : `.${this.config.dataDirectory}`}`,
+            path: `${await appdata()}/${process.platform === 'darwin' ? this.config.dataDirectory : `.${this.config.dataDirectory}`}`,
             instance: options.name,
             version: options.loadder.minecraft_version,
-            detached: configClient.launcher_config.closeLauncher == "close-all" ? false : true,
+            detached: configClient.launcher_config.closeLauncher === "close-all" ? false : true,
             downloadFileMultiple: configClient.launcher_config.download_multi,
             intelEnabledMac: configClient.launcher_config.intelEnabledMac,
-
             loader: {
                 type: options.loadder.loadder_type,
                 build: options.loadder.loadder_version,
-                enable: options.loadder.loadder_type == 'none' ? false : true
+                enable: options.loadder.loadder_type !== 'none'
             },
-
             verify: options.verify,
-
-            ignored: [...options.ignored],
-
-            java: {
-                path: configClient.java_config.java_path,
-            },
-
-            JVM_ARGS:  options.jvm_args ? options.jvm_args : [],
-            GAME_ARGS: options.game_args ? options.game_args : [],
-
+            ignored: [...(options.ignored || [])],
+            java: { path: configClient.java_config.java_path },
+            JVM_ARGS: options.jvm_args || [],
+            GAME_ARGS: options.game_args || [],
             screen: {
                 width: configClient.game_config.screen_size.width,
                 height: configClient.game_config.screen_size.height
             },
-
             memory: {
                 min: `${configClient.java_config.java_memory.min * 1024}M`,
                 max: `${configClient.java_config.java_memory.max * 1024}M`
             }
-        }
+        };
+
+        const btn = this.$.playInstanceBtn;
+        const box = this.$.infoBox;
+        const text = this.$.infoText;
+        const bar = this.$.progressBar;
 
         launch.Launch(opt);
 
-        playInstanceBTN.style.display = "none"
-        infoStartingBOX.style.display = "block"
-        progressBar.style.display = "";
-        ipcRenderer.send('main-window-progress-load')
-
-        launch.on('extract', extract => {
-            ipcRenderer.send('main-window-progress-load')
-            console.log(extract);
-        });
+        btn.style.display = "none";
+        box.style.display = "block";
+        bar.style.display = "";
+        ipcRenderer.send('main-window-progress-load');
 
         launch.on('progress', (progress, size) => {
-            infoStarting.innerHTML = `Téléchargement ${((progress / size) * 100).toFixed(0)}%`
-            ipcRenderer.send('main-window-progress', { progress, size })
-            progressBar.value = progress;
-            progressBar.max = size;
+            text.innerHTML = `Descargando ${((progress / size) * 100).toFixed(0)}%`;
+            ipcRenderer.send('main-window-progress', { progress, size });
+            bar.value = progress; bar.max = size;
         });
-
         launch.on('check', (progress, size) => {
-            infoStarting.innerHTML = `Vérification ${((progress / size) * 100).toFixed(0)}%`
-            ipcRenderer.send('main-window-progress', { progress, size })
-            progressBar.value = progress;
-            progressBar.max = size;
+            text.innerHTML = `Verificando ${((progress / size) * 100).toFixed(0)}%`;
+            ipcRenderer.send('main-window-progress', { progress, size });
+            bar.value = progress; bar.max = size;
         });
-
-        launch.on('estimated', (time) => {
-            let hours = Math.floor(time / 3600);
-            let minutes = Math.floor((time - hours * 3600) / 60);
-            let seconds = Math.floor(time - hours * 3600 - minutes * 60);
-            console.log(`${hours}h ${minutes}m ${seconds}s`);
-        })
-
-        launch.on('speed', (speed) => {
-            console.log(`${(speed / 1067008).toFixed(2)} Mb/s`)
-        })
-
-        launch.on('patch', patch => {
-            console.log(patch);
-            ipcRenderer.send('main-window-progress-load')
-            infoStarting.innerHTML = `Patch en cours...`
+        launch.on('patch', () => {
+            ipcRenderer.send('main-window-progress-load');
+            text.innerHTML = `Aplicando patch...`;
         });
-
-        launch.on('data', (e) => {
-            progressBar.style.display = "none"
-            if (configClient.launcher_config.closeLauncher == 'close-launcher') {
-                ipcRenderer.send("main-window-hide")
-            };
+        launch.on('data', () => {
+            bar.style.display = "none";
+            if (configClient.launcher_config.closeLauncher === 'close-launcher') {
+                ipcRenderer.send("main-window-hide");
+            }
             new logger('Minecraft', '#36b030');
-            ipcRenderer.send('main-window-progress-load')
-            infoStarting.innerHTML = `Demarrage en cours...`
-            console.log(e);
-        })
-
-        launch.on('close', code => {
-            if (configClient.launcher_config.closeLauncher == 'close-launcher') {
-                ipcRenderer.send("main-window-show")
-            };
-            ipcRenderer.send('main-window-progress-reset')
-            infoStartingBOX.style.display = "none"
-            playInstanceBTN.style.display = "flex"
-            infoStarting.innerHTML = `Vérification`
-            new logger(pkg.name, '#7289da');
-            console.log('Close');
+            ipcRenderer.send('main-window-progress-load');
+            text.innerHTML = `Iniciando juego...`;
         });
-
+        launch.on('close', () => {
+            if (configClient.launcher_config.closeLauncher === 'close-launcher') {
+                ipcRenderer.send("main-window-show");
+            }
+            ipcRenderer.send('main-window-progress-reset');
+            box.style.display = "none";
+            btn.style.display = "flex";
+            text.innerHTML = `Verificación`;
+            new logger(pkg.name, '#7289da');
+        });
         launch.on('error', err => {
-            let popupError = new popup()
-
+            const popupError = new popup();
             popupError.openPopup({
-                title: 'Erreur',
+                title: 'Error',
                 content: err.error,
                 color: 'red',
                 options: true
-            })
-
-            if (configClient.launcher_config.closeLauncher == 'close-launcher') {
-                ipcRenderer.send("main-window-show")
-            };
-            ipcRenderer.send('main-window-progress-reset')
-            infoStartingBOX.style.display = "none"
-            playInstanceBTN.style.display = "flex"
-            infoStarting.innerHTML = `Vérification`
+            });
+            if (configClient.launcher_config.closeLauncher === 'close-launcher') {
+                ipcRenderer.send("main-window-show");
+            }
+            ipcRenderer.send('main-window-progress-reset');
+            box.style.display = "none";
+            btn.style.display = "flex";
+            text.innerHTML = `Verificación`;
             new logger(pkg.name, '#7289da');
-            console.log(err);
+            console.error(err);
         });
     }
 
-    getdate(e) {
-        let date = new Date(e)
-        let year = date.getFullYear()
-        let month = date.getMonth() + 1
-        let day = date.getDate()
-        let allMonth = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
-        return { year: year, month: allMonth[month - 1], day: day }
+    /* ================= Utils ================= */
+    fmtDate(e) {
+        const date = new Date(e);
+        const allMonth = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+        return { year: date.getFullYear(), month: allMonth[date.getMonth()], day: date.getDate() };
+    }
+    escapeHTML(str = "") {
+        return str.replace(/[&<>'"]/g, c => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        }[c]));
     }
 }
+
 export default Home;

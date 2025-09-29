@@ -1,59 +1,66 @@
+<!-- src/panels/home.html -->
 <div class="container">
-    <div class="status-server">
-        <img class="server-status-icon" src="assets/images/icon.png">
-        <div class="server-status-infos">
-            <div class="server-status-name">Minecraft</div>
-            <div class="server-status-text">operationeel - 0 ms</div>
-        </div>
-        <div class="status-player-count">
-            <div class="player-count">0</div>
+    <!-- Barra superior centrada: Nombre de la instancia | Jugadores -->
+    <div class="status-server" role="status" aria-live="polite">
+        <div class="status-center">
+            <span class="server-status-name">Nombre de la instancia</span>
+            <span class="separator">|</span>
+            <span class="server-players">0 jugadores</span>
         </div>
     </div>
 
+
+    <!-- Contenido principal -->
     <div class="home-bottom">
         <div class="new-tab">
-            <div class="news-list content-scroll"></div>
-        </div>
-        <div class="social-tab">
-            <div class="social-list content-scroll">
-                <div data-url="https://discord.gg/e9q7Yr2cuQ" class="social-block">
-                    <div class="icon-discord icon-social"></div>
-                </div>
-
-                <div data-url="https://github.com/luuxis" class="social-block">
-                    <div class="icon-github icon-social"></div>
-                </div>
-
-                <div data-url="https://www.youtube.com/LuuxisHD" class="social-block">
-                    <div class="icon-youtube icon-social"></div>
+            <!-- HERO: imagen grande de la instancia -->
+            <div class="instance-hero" role="img" aria-label="Instancia seleccionada">
+                <div class="instance-hero__overlay"></div>
+                <div class="instance-hero__content">
+                    <div class="instance-hero__name">Nombre de la instancia</div>
+                    <div class="instance-hero__meta">
+                        <span class="chip chip--loader">Loader</span>
+                        <span class="chip chip--version">Versión</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="sidebar">
-        <div class="player-options">
-            <div class="player-head"></div>
+    <!-- BARRA INFERIOR: Skin | Nickname | Jugar | Opciones -->
+    <div class="sidebar" role="toolbar">
+        <!-- Izquierda: avatar + nickname -->
+        <div class="player-slot">
+            <div class="player-head" aria-label="Avatar del jugador"></div>
+            <div class="player-meta">
+                <div class="player-nick">Jugador</div>
+                <div class="player-sub">Conectado</div>
+            </div>
         </div>
 
-        <div class="play-elements">
+        <!-- Centro: botón Jugar -->
+        <div class="play-zone">
             <div class="play-instance">
-                <button class="play-btn">Jouer</button>
-                <div class="instance-select icon-arrow"></div>
+                <button class="play-btn" aria-label="Jugar">Jugar</button>
+                <div class="instance-select" title="Cambiar instancia" aria-label="Cambiar instancia" role="button" tabindex="0">▾</div>
             </div>
             <div class="info-starting-game">
-                <div class="info-starting-game-text">Connexion...</div>
+                <div class="info-starting-game-text">Conectando…</div>
                 <progress value="0" max="0" class="progress-bar"></progress>
             </div>
         </div>
 
-        <div class="settings-btn icon-settings"></div>
+        <!-- Derecha: opciones -->
+        <div class="options-slot">
+            <div class="settings-btn" title="Ajustes" role="button" aria-label="Ajustes">⚙</div>
+        </div>
     </div>
 
+    <!-- Popup selección de instancias -->
     <div class="instance-popup">
         <div class="instances-tab">
-            <div class="close-popup icon-close"></div>
-            <p>Choisissez votre instance...</p>
+            <div class="close-popup" title="Cerrar">✕</div>
+            <p>Elige tu instancia…</p>
             <div class="instances-List"></div>
         </div>
     </div>

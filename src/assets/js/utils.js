@@ -1,10 +1,16 @@
+// src/utils.js
+/**
+ * Utilidades compartidas del launcher
+ * - Barra superior minimal: "Nombre de la instancia | Jugadores"
+ * - Helpers de tema, paneles, cuentas y estado del server
+ */
 
-
-const { ipcRenderer } = require('electron')
-const { Status } = require('minecraft-java-core')
+const { ipcRenderer } = require('electron');
+const { Status } = require('minecraft-java-core');
 const fs = require('fs');
 const pkg = require('../package.json');
 
+// Imports ESM del proyecto (ajusta las rutas si difieren)
 import config from './utils/config.js';
 import database from './utils/database.js';
 import logger from './utils/logger.js';
@@ -12,117 +18,134 @@ import popup from './utils/popup.js';
 import { skin2D } from './utils/skin.js';
 import slider from './utils/slider.js';
 
+/* =================== Tema / Fondo =================== */
 async function setBackground(theme) {
-    if (typeof theme == 'undefined') {
-        let databaseLauncher = new database();
-        let configClient = await databaseLauncher.readData('configClient');
-        theme = configClient?.launcher_config?.theme || "auto"
-        theme = await ipcRenderer.invoke('is-dark-theme', theme).then(res => res)
+    if (typeof theme === 'undefined') {
+        const db = new database();
+        const cfg = await db.readData('configClient');
+        theme = cfg?.launcher_config?.theme || 'auto';
+        theme = await ipcRenderer.invoke('is-dark-theme', theme).then(res => res);
     }
-    let background
-    let body = document.body;
+
+    const body = document.body;
     body.className = theme ? 'dark global' : 'light global';
+
+    let background;
+    // Easter egg aleatorio (0.5%)
     if (fs.existsSync(`${__dirname}/assets/images/background/easterEgg`) && Math.random() < 0.005) {
-        let backgrounds = fs.readdirSync(`${__dirname}/assets/images/background/easterEgg`);
-        let Background = backgrounds[Math.floor(Math.random() * backgrounds.length)];
-        background = `url(./assets/images/background/easterEgg/${Background})`;
+        const arr = fs.readdirSync(`${__dirname}/assets/images/background/easterEgg`);
+        const pick = arr[Math.floor(Math.random() * arr.length)];
+        background = `url(./assets/images/background/easterEgg/${pick})`;
     } else if (fs.existsSync(`${__dirname}/assets/images/background/${theme ? 'dark' : 'light'}`)) {
-        let backgrounds = fs.readdirSync(`${__dirname}/assets/images/background/${theme ? 'dark' : 'light'}`);
-        let Background = backgrounds[Math.floor(Math.random() * backgrounds.length)];
-        background = `linear-gradient(#00000080, #00000080), url(./assets/images/background/${theme ? 'dark' : 'light'}/${Background})`;
+        const arr = fs.readdirSync(`${__dirname}/assets/images/background/${theme ? 'dark' : 'light'}`);
+        const pick = arr[Math.floor(Math.random() * arr.length)];
+        background = `linear-gradient(#00000080, #00000080), url(./assets/images/background/${theme ? 'dark' : 'light'}/${pick})`;
     }
-    body.style.backgroundImage = background ? background : theme ? '#000' : '#fff';
+
+    body.style.backgroundImage = background ? background : (theme ? '#000' : '#fff');
     body.style.backgroundSize = 'cover';
 }
 
+/* =================== Paneles =================== */
 async function changePanel(id) {
-    let panel = document.querySelector(`.${id}`);
-    let active = document.querySelector(`.active`)
-    if (active) active.classList.toggle("active");
-    panel.classList.add("active");
+    const panel = document.querySelector(`.${id}`);
+    const active = document.querySelector(`.active`);
+    if (active) active.classList.toggle('active');
+    if (panel) panel.classList.add('active');
 }
 
+/* =================== Sistema =================== */
 async function appdata() {
-    return await ipcRenderer.invoke('appData').then(path => path)
+    return await ipcRenderer.invoke('appData').then(path => path);
 }
 
+/* =================== Cuentas =================== */
 async function addAccount(data) {
-    let skin = false
-    if (data?.profile?.skins[0]?.base64) skin = await new skin2D().creatHeadTexture(data.profile.skins[0].base64);
-    let div = document.createElement("div");
-    div.classList.add("account");
+    let skin = false;
+    if (data?.profile?.skins?.[0]?.base64) {
+        skin = await new skin2D().creatHeadTexture(data.profile.skins[0].base64);
+    }
+
+    const div = document.createElement('div');
+    div.classList.add('account');
     div.id = data.ID;
     div.innerHTML = `
-        <div class="profile-image" ${skin ? 'style="background-image: url(' + skin + ');"' : ''}></div>
-        <div class="profile-infos">
-            <div class="profile-pseudo">${data.name}</div>
-            <div class="profile-uuid">${data.uuid}</div>
-        </div>
-        <div class="delete-profile" id="${data.ID}">
-            <div class="icon-account-delete delete-profile-icon"></div>
-        </div>
-    `
-    return document.querySelector('.accounts-list').appendChild(div);
+    <div class="profile-image" ${skin ? 'style="background-image: url(' + skin + ');"' : ''}></div>
+    <div class="profile-infos">
+      <div class="profile-pseudo">${data.name}</div>
+      <div class="profile-uuid">${data.uuid}</div>
+    </div>
+    <div class="delete-profile" id="${data.ID}">
+      <div class="icon-account-delete delete-profile-icon"></div>
+    </div>
+  `;
+    return document.querySelector('.accounts-list')?.appendChild(div);
 }
 
 async function accountSelect(data) {
-    let account = document.getElementById(`${data.ID}`);
-    let activeAccount = document.querySelector('.account-select')
+    const account = document.getElementById(`${data.ID}`);
+    const active = document.querySelector('.account-select');
+    if (active) active.classList.toggle('account-select');
+    if (account) account.classList.add('account-select');
 
-    if (activeAccount) activeAccount.classList.toggle('account-select');
-    account.classList.add('account-select');
-    if (data?.profile?.skins[0]?.base64) headplayer(data.profile.skins[0].base64);
+    if (data?.profile?.skins?.[0]?.base64) {
+        headplayer(data.profile.skins[0].base64);
+    }
 }
 
 async function headplayer(skinBase64) {
-    let skin = await new skin2D().creatHeadTexture(skinBase64);
-    document.querySelector(".player-head").style.backgroundImage = `url(${skin})`;
+    const skin = await new skin2D().creatHeadTexture(skinBase64);
+    const el = document.querySelector('.player-head');
+    if (el) el.style.backgroundImage = `url(${skin})`;
 }
 
+/* =================== Estado del servidor (barra superior minimal) =================== */
+/**
+ * Actualiza la barra superior con "Nombre de la instancia | X jugadores"
+ * SIN logo, SIN ping.
+ * Espera un objeto opt.status como:
+ *   { nameServer, ip, port }
+ */
 async function setStatus(opt) {
-    let nameServerElement = document.querySelector('.server-status-name')
-    let statusServerElement = document.querySelector('.server-status-text')
-    let playersOnline = document.querySelector('.status-player-count .player-count')
+    const nameEl = document.querySelector('.server-status-name');
+    const playersEl = document.querySelector('.server-players');
 
+    // Si no existe el DOM correspondiente, no hacemos nada
+    if (!nameEl && !playersEl) return;
+
+    // Estado base si no hay configuración
     if (!opt) {
-        statusServerElement.classList.add('red')
-        statusServerElement.innerHTML = `Ferme - 0 ms`
-        document.querySelector('.status-player-count').classList.add('red')
-        playersOnline.innerHTML = '0'
-        return
+        if (nameEl) nameEl.textContent = 'Servidor';
+        if (playersEl) playersEl.textContent = '0 jugadores';
+        return;
     }
 
-    let { ip, port, nameServer } = opt
-    nameServerElement.innerHTML = nameServer
-    let status = new Status(ip, port);
-    let statusServer = await status.getStatus().then(res => res).catch(err => err);
+    const { ip, port, nameServer } = opt;
+    if (nameEl) nameEl.textContent = nameServer || 'Servidor';
 
-    if (!statusServer.error) {
-        statusServerElement.classList.remove('red')
-        document.querySelector('.status-player-count').classList.remove('red')
-        statusServerElement.innerHTML = `En ligne - ${statusServer.ms} ms`
-        playersOnline.innerHTML = statusServer.playersConnect
-    } else {
-        statusServerElement.classList.add('red')
-        statusServerElement.innerHTML = `Ferme - 0 ms`
-        document.querySelector('.status-player-count').classList.add('red')
-        playersOnline.innerHTML = '0'
+    try {
+        const status = new Status(ip, port);
+        const res = await status.getStatus().then(r => r).catch(() => null);
+        const count = (res && !res.error) ? (res.playersConnect ?? 0) : 0;
+        if (playersEl) playersEl.textContent = `${count} ${count === 1 ? 'jugador' : 'jugadores'}`;
+    } catch {
+        if (playersEl) playersEl.textContent = '0 jugadores';
     }
 }
 
-
+/* =================== Exports =================== */
 export {
-    appdata as appdata,
-    changePanel as changePanel,
-    config as config,
-    database as database,
-    logger as logger,
-    popup as popup,
-    setBackground as setBackground,
-    skin2D as skin2D,
-    addAccount as addAccount,
-    accountSelect as accountSelect,
+    appdata,
+    changePanel,
+    config,
+    database,
+    logger,
+    popup,
+    setBackground,
+    skin2D,
+    addAccount,
+    accountSelect,
     slider as Slider,
-    pkg as pkg,
-    setStatus as setStatus
-}
+    pkg,
+    setStatus
+};
