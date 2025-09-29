@@ -10,93 +10,95 @@
     --muted: #9aa4b2;
     --success: #1AC707;
     --danger: #FF3B3B;
+
+    /* Alturas clave para evitar overflow */
+    --topH: 3.4rem;      /* status-server */
+    --bottomH: 5.8rem;   /* sidebar */
+    --gapV: 1.2rem;      /* gaps verticales (arriba/abajo) */
 }
 
+/* ===== Reset & layout base (evita scroll global) ===== */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { height:100%; }
+
+body.global {            /* body tiene clase 'global' en tu app */
+    overflow: hidden;      /* NO scroll global */
+}
+
+.home { height:100%; }
 .home .container{
     display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-    height:100%; gap:1.2rem; padding:1rem 0;
+    height:100vh;                          /* ocupa toda la ventana */
+    gap:var(--gapV); padding:calc(var(--gapV)/1.5) 0;
+    overflow:hidden;                       /* nada se sale del contenedor */
 }
 
-/* TOP: estado servidor (minimal, centrado y más corto) */
+/* ===== TOP: estado servidor (centrado y corto) ===== */
 .status-server{
     display:flex; align-items:center; justify-content:center;
-    width:min(720px, 82vw); height:3.4rem; padding:0 .75rem;
+    width:min(720px, 82vw); height:var(--topH); padding:0 .75rem;
     border-radius:14px; background:var(--panel);
     border:1px solid var(--stroke); backdrop-filter: blur(14px);
-    margin-inline:auto;
+    margin-inline:auto; flex:0 0 auto;    /* no crece ni colapsa */
 }
-
 .status-center{
     display:flex; align-items:center; gap:.6rem;
     color:var(--txt); font-weight:800; letter-spacing:.2px;
     font-size:1.05rem;
 }
-.status-center .separator{
-    opacity:.45;
-}
+.status-center .separator{ opacity:.45; }
+.server-status-name{ color:var(--txt); }
+.server-players{ color:var(--txt); opacity:.85; }
 
+/* (clases antiguas no usadas pueden quedarse sin efecto) */
+.server-status-infos{ display:none; }
 
-.server-status-name{
-    color:var(--txt);
-}
-
-.server-players{
-    color:var(--txt);
-    opacity:.85;
-}
-
-.server-status-infos{ display:flex; align-items:center; gap:1rem; }
-.server-status-name{ font-size:1.15rem; color:var(--txt); font-weight:800; letter-spacing:.3px; }
-.server-status-text.red{ color:var(--danger); }
-.status-player-count{
-    display:flex; align-items:center; justify-content:center;
-    min-width:3.2rem; height:3.2rem; border-radius:12px;
-    background:var(--panel-strong); border:1px solid var(--stroke); position:relative;
-}
-.player-count{ font-size:1.2rem; color:var(--txt); }
-.status-player-count::after{
-    content:''; position:absolute; width:.65rem; height:.65rem; right:.5rem; top:.5rem;
-    border-radius:50%; background:var(--success); box-shadow:0 0 0 3px var(--panel-strong);
-}
-.status-player-count.red::after{ background:var(--danger); }
-
-/* CUERPO: solo hero centrado */
+/* ===== CUERPO: contenedor flexible SIN overflow ===== */
 .home-bottom{
     width:min(1120px, 94vw);
+    flex:1 1 auto;              /* ocupa el espacio libre */
+    min-height:0;               /* importante para que hijos puedan hacer overflow:hidden */
     display:flex; align-items:center; justify-content:center;
+    overflow:hidden;            /* evita scroll interno */
 }
+
 .new-tab{
     width:100%;
     background:var(--panel); border:1px solid var(--stroke);
-    border-radius:16px; backdrop-filter: blur(12px); overflow:hidden;
-    padding:1rem 1.25rem 1.25rem;
+    border-radius:16px; backdrop-filter: blur(12px);
+    overflow:hidden; padding:1rem 1.25rem 1.25rem;
 }
 
-/* HERO grande y centrado */
+/* ===== HERO grande y SIEMPRE visible sin generar scroll =====
+   Usamos aspect-ratio + max-height calculado con 100vh */
 .instance-hero{
     position: relative;
-    width: min(1080px, 100%);
-    height: clamp(320px, 42vw, 520px);
-    margin: .25rem auto 0;
-    border-radius: 16px;
-    overflow: hidden;
-    background: #0f1116 center/cover no-repeat;
-    border: 1px solid var(--stroke);
-    box-shadow: 0 24px 48px rgba(0,0,0,.28);
+    width:min(1080px, 100%);
+    aspect-ratio: 21 / 9;                      /* mantiene proporción bonita */
+    height:auto;
+    max-height: calc(100vh - var(--topH) - var(--bottomH) - (2.5 * var(--gapV)));
+    margin:.25rem auto 0;
+    border-radius:16px; overflow:hidden;
+    background:#0f1116 center/cover no-repeat;
+    border:1px solid var(--stroke);
+    box-shadow:0 24px 48px rgba(0,0,0,.28);
 }
 .instance-hero__overlay{
-    position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.55) 65%, rgba(0,0,0,.88) 100%);
-    pointer-events: none;
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.55) 65%, rgba(0,0,0,.88) 100%);
+    pointer-events:none;
 }
 .instance-hero__content{
-    position: absolute; left: 1.4rem; right: 1.4rem; bottom: 1.4rem;
-    display: flex; flex-direction: column; gap: .55rem;
+    position:absolute; left:1.4rem; right:1.4rem; bottom:1.4rem;
+    display:flex; flex-direction:column; gap:.55rem;
 }
 .instance-hero__name{
-    color: var(--txt); font-weight: 900;
-    font-size: clamp(1.4rem, 3.6vw, 2.2rem);
-    letter-spacing: .3px; text-shadow: 0 4px 20px rgba(0,0,0,.55);
+    color:var(--txt); font-weight:900;
+    font-size:clamp(1.4rem, 3.2vw, 2.2rem);
+    letter-spacing:.3px; text-shadow:0 4px 20px rgba(0,0,0,.55);
 }
 .instance-hero__meta{ display:flex; gap:.55rem; flex-wrap:wrap; }
 .chip{
@@ -107,36 +109,31 @@
 .chip--loader{ background: rgba(124,156,255,.16); border-color: rgba(124,156,255,.35); }
 .chip--version{ background: rgba(143,240,164,.16); border-color: rgba(143,240,164,.35); }
 
-/* BARRA INFERIOR (Skin | Nick | Jugar | Opciones) */
+/* ===== BARRA INFERIOR (Skin | Nick | Jugar | Opciones) ===== */
 .sidebar{
     width:min(1120px, 94vw); background:var(--panel);
     border:1px solid var(--stroke); border-radius:16px; backdrop-filter: blur(12px);
-    padding:.6rem .9rem; margin-top:.8rem;
-
+    padding:.6rem .9rem; margin-top:.6rem;
     display:grid; align-items:center;
-    grid-template-columns: auto 1fr auto; /* izq | centro expand | der */
-    gap:.8rem;
+    grid-template-columns:auto 1fr auto; gap:.8rem;
+    height:var(--bottomH); flex:0 0 auto;                 /* altura fija */
 }
 
-/* Izquierda: Skin + Nick */
-.player-slot{
-    display:flex; align-items:center; gap:.8rem;
-}
+.player-slot{ display:flex; align-items:center; gap:.8rem; min-width:0; }
 .player-head{
     width:3.4rem; height:3.4rem; border-radius:12px;
     background:url('../../images/default/setve.png') center/cover no-repeat;
     image-rendering: pixelated; border:1px solid var(--stroke);
 }
-.player-meta{ display:flex; flex-direction:column; }
+.player-meta{ display:flex; flex-direction:column; min-width:0; }
 .player-nick{
     color:var(--txt); font-weight:800; font-size:1.05rem; letter-spacing:.2px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;  /* evita desbordes */
 }
-.player-sub{ color:var(--muted); font-size:.85rem; }
+.player-sub{ color:var(--muted); font-size:.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
 /* Centro: botón jugar */
-.play-zone{
-    display:flex; justify-content:center; align-items:center; min-height:3.2rem;
-}
+.play-zone{ display:flex; justify-content:center; align-items:center; min-height:3.2rem; }
 .play-instance{
     display:flex; align-items:center; position:relative;
     border:1px solid var(--stroke); border-radius:14px; height:3.2rem; padding-right:2.1rem;
@@ -172,7 +169,7 @@
 }
 .settings-btn:hover{ background:rgba(255,255,255,0.08); }
 
-/* Popup instancias */
+/* ===== Popup instancias ===== */
 .instance-popup{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:1500; }
 .instances-tab{ position:relative; background:var(--panel); border:1px solid var(--stroke); border-radius:14px; padding:1rem 2rem; min-width: min(92vw, 560px); max-height: 70vh; overflow:auto; }
 .close-popup{ position:absolute; top:.75rem; right:.75rem; height:32px; width:32px; display:grid; place-items:center; border-radius:10px; background:rgba(255,255,255,0.06); border:1px solid var(--stroke); cursor:pointer; }
@@ -182,7 +179,7 @@
 .instance-elements:hover, .instance-elements:focus{ background:rgba(255,255,255,0.06); }
 .active-instance{ background:linear-gradient(135deg, rgba(124,156,255,.2), rgba(143,240,164,.15)); border-color: rgba(124,156,255,.45); }
 
-/* Scroll helper */
+/* Scroll helper (solo donde se necesite) */
 .content-scroll{ scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; }
 .content-scroll::-webkit-scrollbar{ width:8px; }
 .content-scroll::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.15); border-radius:10px; }
