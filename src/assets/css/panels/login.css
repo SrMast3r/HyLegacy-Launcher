@@ -1,92 +1,99 @@
-/* ===== Base ===== */
-.login .container{
-    display:flex; align-items:center; justify-content:center;
-    height:100%; padding:24px;
+/* --- SIN SCROLL GLOBAL --- */
+html, body { height:100%; margin:0; overflow:hidden; }
+
+/* Hereda tu tema */
+:root{
+    /* ya existen en tu theme: --background, --color, --element-color */
+    --panel: rgba(255,255,255,.06);
+    --panel-strong: rgba(255,255,255,.10);
+    --stroke: rgba(255,255,255,.10);
+    --neon: #2DFF88; --neon-2:#1BCB68;
+    --glow: 0 0 12px rgba(45,255,136,.35), 0 0 24px rgba(45,255,136,.18);
+    --radius: 16px;
 }
 
-/* Tarjeta centrada y fluida */
+.login {
+    min-height:100vh;
+    display:grid; place-items:center;
+    background: var(--background);
+}
+
+.login .container{
+    /* el wrapper ocupa toda la vista, pero sin scroll */
+    width: min(560px, 92vw);
+    height: auto;
+    display:grid; place-items:center;
+    padding: 0 12px;
+}
+
+/* Tarjeta (misma vibra que tu UI) */
 .login-tabs{
-    position:absolute; inset:auto; /* no fixed coords */
-    padding:20px 22px;
-    min-width:min(520px, 92vw);
-    border-radius:16px;
+    display:none;
+    width:100%;
+    border-radius: var(--radius);
+    border:1px solid var(--stroke);
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+    box-shadow: 0 24px 48px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
+    padding: 22px 20px;
     text-align:center;
 
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-    border:1px solid rgba(255,255,255,.10);
-    box-shadow: 0 24px 48px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
-
-    opacity:0; transform: translateY(12px) scale(.995);
-    transition: opacity .25s ease, transform .25s cubic-bezier(.21,.98,.24,.99);
+    opacity:0; transform: translateY(10px) scale(.995);
+    transition: opacity .22s ease, transform .22s cubic-bezier(.21,.98,.24,.99);
 }
-.login-tabs.show{ opacity:1; transform:none; }
+.login-tabs.is-active{ display:block; opacity:1; transform:none; }
 
-.login-home,
-.login-offline,
-.login-AZauth,
-.login-AZauth-A2F{ display:none; }
-
-/* Texto */
 .login-text{
-    font-size: clamp(1.05rem, 2.8vw, 1.25rem);
-    font-weight: 900;
+    margin: 4px 0 12px;
     color: var(--color);
-    margin-bottom: 12px;
+    font-weight: 900;
+    font-size: clamp(1.1rem, 2.8vw, 1.35rem);
 }
 
-/* Inputs */
 .input-login{
     display:grid; gap:10px; justify-items:center; margin: 8px 0 2px;
 }
 .input-login .email,
 .input-login .password,
 .A2F{
+    width:min(460px, 86%);
     color: var(--color);
-    background: rgba(255,255,255,.04);
-    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.05);
+    border:1px solid var(--panel-strong);
     border-radius: 14px;
-    width: min(460px, 86vw);
-    padding: .65rem .9rem;
-    outline: none;
+    padding:.65rem .9rem;
+    outline:none;
     transition: box-shadow .12s ease, border-color .12s ease, background .12s ease;
 }
-.input-login .email::placeholder,
-.input-login .password::placeholder,
-.A2F::placeholder{
-    color: rgba(255,255,255,.65);
-}
-.input-login .email:focus,
-.input-login .password:focus,
-.A2F:focus{
+.input-login input::placeholder{ color: rgba(255,255,255,.75); }
+.input-login input:focus{
     border-color: var(--element-color);
     box-shadow: 0 0 0 2px rgba(45,255,136,.18);
-    background: rgba(255,255,255,.06);
+    background: rgba(255,255,255,.07);
 }
 
-/* Acciones */
 .login-options{
-    display:flex; justify-content:center; flex-wrap:wrap; gap:12px;
-    margin-top:14px;
+    display:flex; justify-content:center; gap:12px; flex-wrap:wrap;
+    margin: 14px 0 4px;
 }
 .connect, .cancel{
     appearance:none; border:none; cursor:pointer;
-    color:#03140A; font-weight:1000; letter-spacing:.3px;
-    padding:.65rem 2.2rem; border-radius:14px;
+    padding:.7rem 2rem; border-radius:14px; font-weight:1000; letter-spacing:.3px;
     transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
 }
 .connect{
-    background: linear-gradient(135deg, #2DFF88, #1BCB68);
-    box-shadow: 0 0 12px rgba(45,255,136,.35), 0 0 24px rgba(45,255,136,.18), inset 0 0 0 1px rgba(255,255,255,.22);
+    color:#03140A;
+    background: linear-gradient(135deg, var(--neon), var(--neon-2));
+    box-shadow: var(--glow), inset 0 0 0 1px rgba(255,255,255,.22);
 }
 .cancel{
     color: var(--color);
     background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.20);
+    border:1px solid rgba(255,255,255,.18);
 }
-.connect:hover, .cancel:hover{ transform: translateY(-1px); filter:brightness(1.02) contrast(1.05); }
-.connect:active, .cancel:active{ transform: translateY(1px) scale(.995); }
+.connect:hover, .cancel:hover{ transform:translateY(-1px); filter:brightness(1.02) contrast(1.05); }
+.connect:active, .cancel:active{ transform:translateY(1px) scale(.995); }
 
-/* Micro anim de entrada */
+/* Accesibilidad */
 @media (prefers-reduced-motion: reduce){
     .login-tabs{ transition:none !important; transform:none !important; opacity:1 !important; }
 }
