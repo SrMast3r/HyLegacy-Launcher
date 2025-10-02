@@ -1,7 +1,7 @@
 {
   "name": "hylegacy-client",
   "productName": "HyLegacy Client",
-  "version": "1.1.5",
+  "version": "1.1.122",
   "description": "",
   "main": "src/app.js",
   "author": {
@@ -13,7 +13,7 @@
   "scripts": {
     "start": "cross-env-shell NODE_ENV=dev electron .",
     "dev": "cross-env-shell DEV_TOOL=open nodemon --exec npm start",
-    "build": "node build.js --obf=true --build=platform"  // <-- tu build ya llama a electron-builder
+    "build": "node build.js --obf=true --build=platform"
   },
   "license": "CCANC",
   "nodemonConfig": {
