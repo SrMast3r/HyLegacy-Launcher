@@ -1,74 +1,44 @@
 {
-  "name": "hylegacy-client",
-  "productName": "HyLegacy Client",
-  "version": "1.1.123",
-  "description": "",
-  "main": "src/app.js",
-  "author": {
-    "name": "HyLegacy LLC",
-    "email": "account@hylegacy.com",
-    "url": "https://www.hylegacy.com/"
-  },
-  "url": "http://66.181.33.120:25592/",
-  "scripts": {
-    "start": "cross-env-shell NODE_ENV=dev electron .",
-    "dev": "cross-env-shell DEV_TOOL=open nodemon --exec npm start",
-    "build": "node build.js --obf=true --build=platform"
-  },
-  "license": "CCANC",
-  "nodemonConfig": {
-    "ext": "js,html,css",
-    "ignore": "**/test"
-  },
-  "dependencies": {
-    "electron-updater": "^6.1.8",
-    "minecraft-java-core": "^4.1.7",
-    "node-bdd": "^2.0.4",
-    "node-fetch": "^2.7.0",
-    "xml-js": "^1.6.11"
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3",
-    "electron": "^30.5.1",
-    "electron-builder": "^26.0.12",
-    "javascript-obfuscator": "^4.1.0",
-    "jimp": "^0.22.12",
-    "nodemon": "^3.1.2",
-    "png2icons": "^2.0.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SrMast3r/HyLegacy-Launcher.git"
-  },
-
-  "build": {
-    "appId": "com.hylegacy.client",
-    "directories": {
-      "output": "dist"
+    "name": "HyLegacy Client",
+    "preductname": "HyLegacy Client",
+    "version": "2.1.1",
+    "description": "",
+    "main": "src/app.js",
+    "author": {
+        "name": "HyLegacy LLC",
+        "email": "account@hylegacy.com",
+        "url": "https://www.hylegacy.com/"
     },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "SrMast3r",
-        "repo": "HyLegacy-Launcher",
-        "releaseType": "release",
-        "vPrefixedTagName": false
-      }
-    ],
-    "artifactName": "${productName}-${os}-${arch}.${ext}",
-    "files": [
-      "src/**",
-      "package.json"
-    ],
-    "mac": {
-      "target": ["dmg", "zip"]
+    "url": "http://66.181.33.120:25592/",
+    "scripts": {
+        "start": "cross-env-shell NODE_ENV=dev electron .",
+        "dev": "cross-env-shell DEV_TOOL=open nodemon --exec npm start",
+        "build": "node build.js --obf=true --build=platform",
+        "icon": "node build.js --icon=https://i.imgur.com/YtnW6HZ.png"
     },
-    "win": {
-      "target": ["nsis", "zip"]
+    "license": "CCANC",
+    "nodemonConfig": {
+        "ext": "js,html,css",
+        "ignore": "**/test"
     },
-    "linux": {
-      "target": ["AppImage", "zip"],
-      "category": "Game"
+    "dependencies": {
+        "electron-updater": "^6.1.8",
+        "minecraft-java-core": "^4.1.7",
+        "node-bdd": "^2.0.4",
+        "node-fetch": "^2.7.0",
+        "xml-js": "^1.6.11"
+    },
+    "devDependencies": {
+        "cross-env": "^7.0.3",
+        "electron": "^30.5.1",
+        "electron-builder": "^26.0.12",
+        "javascript-obfuscator": "^4.1.0",
+        "jimp": "^0.22.12",
+        "nodemon": "^3.1.2",
+        "png2icons": "^2.0.1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SrMast3r/HyLegacy-Launcher.git"
     }
-  }
 }

@@ -32,7 +32,6 @@ class Index {
     async Obfuscate() {
         if (fs.existsSync("./app")) fs.rmSync("./app", { recursive: true })
 
-
         for (let path of this.Fileslist) {
             let fileName = path.split('/').pop()
             let extFile = fileName.split(".").pop()
