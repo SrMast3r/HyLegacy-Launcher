@@ -1,7 +1,7 @@
 {
   "name": "hyl-client",
-  "productName": "HyLegacy Client",
-  "version": "2.1.8",
+  "preductname": "HyLegacy Client",
+  "version": "2.1.10",
   "description": "",
   "main": "src/app.js",
   "author": {
@@ -9,12 +9,18 @@
     "email": "account@hylegacy.com",
     "url": "https://www.hylegacy.com/"
   },
+  "url": "http://66.181.33.120:25592/",
   "scripts": {
     "start": "cross-env-shell NODE_ENV=dev electron .",
     "dev": "cross-env-shell DEV_TOOL=open nodemon --exec npm start",
-    "build": "node build.js --obf=true --build=platform"
+    "build": "node build.js --obf=true --build=platform",
+    "icon": "node build.js --icon=https://i.imgur.com/YtnW6HZ.png"
   },
   "license": "CCANC",
+  "nodemonConfig": {
+    "ext": "js,html,css",
+    "ignore": "**/test"
+  },
   "dependencies": {
     "electron-updater": "^6.1.8",
     "minecraft-java-core": "^4.1.7",
@@ -34,18 +40,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/SrMast3r/HyLegacy-Launcher.git"
-  },
-  "build": {
-    "appId": "com.hylegacy.client",
-    "productName": "HyLegacy Client",
-    "directories": { "output": "dist" },
-    "files": ["src/**/*", "assets/**/*", "package.json"],
-    "asar": true,
-    "artifactName": "${name}-${version}.${ext}",
-    "win": { "target": "nsis" },
-    "nsis": { "oneClick": true },
-    "publish": [
-      { "provider": "github", "owner": "SrMast3r", "repo": "HyLegacy-Launcher" }
-    ]
   }
 }
