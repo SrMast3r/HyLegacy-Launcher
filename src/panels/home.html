@@ -1,6 +1,5 @@
-<!-- src/panels/home.html -->
-<div class="container">
-    <!-- Barra superior: Nombre de instancia | jugadores -->
+<div class="home container">
+    <!-- TOP: estado servidor centrado -->
     <div class="status-server" role="status" aria-live="polite">
         <div class="status-center">
             <span class="server-status-name">Nombre de la instancia</span>
@@ -9,24 +8,66 @@
         </div>
     </div>
 
-    <!-- Contenido principal -->
-    <div class="home-bottom">
-        <div class="new-tab">
-            <!-- HERO principal de la instancia seleccionada -->
-            <div class="instance-hero" role="img" aria-label="Instancia seleccionada">
-                <div class="instance-hero__overlay"></div>
-                <div class="instance-hero__content">
-                    <div class="instance-hero__name">Nombre de la instancia</div>
-                    <div class="instance-hero__meta">
-                        <span class="chip chip--loader">Loader</span>
-                        <span class="chip chip--version">Versión</span>
+    <!-- SHELL: contenido + rail perfectamente alineados -->
+    <div class="shell">
+        <!-- CONTENIDO -->
+        <main class="mainpanes">
+            <!-- HOME -->
+            <section class="pane pane--home is-active" id="pane-home" aria-labelledby="pane-home-title">
+                <div class="surface">
+                    <div class="instance-hero" role="img" aria-label="Instancia seleccionada">
+                        <div class="instance-hero__overlay"></div>
+                        <div class="instance-hero__content">
+                            <div class="instance-hero__name" id="pane-home-title">Nombre de la instancia</div>
+                            <div class="instance-hero__meta">
+                                <span class="chip chip--loader">Loader</span>
+                                <span class="chip chip--version">Versión</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+
+            <!-- INSTANCIAS -->
+            <section class="pane pane--instances" id="pane-instances" aria-labelledby="pane-instances-title" hidden>
+                <div class="surface">
+                    <div class="pane-head">
+                        <h2 class="pane-title" id="pane-instances-title">Versiones / Instancias</h2>
+                        <div class="pane-sub">Selecciona una para jugar</div>
+                    </div>
+                    <div class="cards-grid instances-List content-scroll" role="listbox" aria-label="Instancias disponibles"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- COLUMNA DE SEPARACIÓN -->
+        <div class="shell-gap" aria-hidden="true"></div>
+
+        <!-- RAIL DERECHO -->
+        <nav class="rail" aria-label="Navegación secundaria">
+            <div class="rail__track"></div>
+            <button class="rail-btn is-active" data-target="pane-home" title="Inicio" aria-label="Inicio">
+                <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <path d="M7 12h4M9 10v4" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <circle cx="15.5" cy="11.5" r="1.2" fill="currentColor"/>
+                    <circle cx="17.5" cy="13.5" r="1.2" fill="currentColor"/>
+                </svg>
+            </button>
+            <button class="rail-btn" data-target="pane-instances" title="Instancias" aria-label="Instancias">
+                <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <path d="M10 6a2 2 0 114 0h2a2 2 0 012 2v2h-1a2 2 0 100 4h1v2a2 2 0 01-2 2h-2a2 2 0 11-4 0H8a2 2 0 01-2-2v-2h1a2 2 0 100-4H6V8a2 2 0 012-2h2z" fill="currentColor"/>
+                </svg>
+            </button>
+            <button class="rail-btn rail-btn--settings" title="Ajustes" aria-label="Ajustes" data-open-settings>
+                <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" fill="currentColor"/>
+                    <path d="M19.4 15a7.8 7.8 0 000-6l2-1.2-2-3.5-2.2.7a7.8 7.8 0 00-4.4-2.6L12 0l-2.8 2.4A7.8 7.8 0 004.8 5L2.6 4.3l-2 3.5 2 1.2a7.8 7.8 0 000 6l-2 1.2 2 3.5 2.2-.7a7.8 7.8 0 004.4 2.6L12 24l2.8-2.4a7.8 7.8 0 004.4-2.6l2.2.7 2-3.5-2-1.2z" fill="currentColor" opacity=".2"/>
+                </svg>
+            </button>
+        </nav>
     </div>
 
-    <!-- Barra inferior: Skin | Nick | Jugar | Opciones -->
+    <!-- FOOTER -->
     <div class="sidebar" role="toolbar">
         <div class="player-slot">
             <div class="player-head" aria-label="Avatar del jugador"></div>
@@ -37,12 +78,11 @@
         </div>
 
         <div class="play-zone">
-            <div class="play-instance">
-                <button class="play-btn" aria-label="Jugar">Jugar</button>
-                <div class="instance-select" title="Cambiar instancia" aria-label="Cambiar instancia" role="button" tabindex="0">▾</div>
-            </div>
+            <!-- Botón normal -->
+            <button class="play-btn" aria-label="Jugar">INICIAR</button>
 
-            <div class="info-starting-game">
+            <!-- Estado de descarga GLOBAL (se muestra durante el launch) -->
+            <div class="info-starting-game" aria-live="polite" style="display:none;">
                 <div class="info-starting-game-text">Conectando…</div>
                 <progress value="0" max="0" class="progress-bar"></progress>
             </div>
@@ -50,15 +90,6 @@
 
         <div class="options-slot">
             <div class="settings-btn" title="Ajustes" role="button" aria-label="Ajustes">⚙</div>
-        </div>
-    </div>
-
-    <!-- Popup: selector de instancias -->
-    <div class="instance-popup" aria-hidden="true">
-        <div class="instances-tab" role="dialog" aria-label="Elige tu instancia">
-            <div class="close-popup" title="Cerrar" role="button" tabindex="0">✕</div>
-            <p>Elige tu instancia…</p>
-            <div class="instances-List content-scroll" aria-live="polite"></div>
         </div>
     </div>
 </div>

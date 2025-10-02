@@ -2,12 +2,23 @@
  * @author Luuxis
  * @license Luuxis License v1.0
  */
+import config from '../utils/config.js';
+import { database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js';
 
-import config from '../utils/config.js'
-import { database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js'
+const { Launch } = require('minecraft-java-core');
+const { ipcRenderer } = require('electron');
 
-const { Launch } = require('minecraft-java-core')
-const { ipcRenderer } = require('electron')
+/* Compat: loader vs loadder */
+const readLoader = (inst) => {
+    const l = inst?.loader ?? inst?.loadder ?? {};
+    return {
+        type: l.loader_type ?? l.loadder_type ?? 'none',
+        version: l.loader_version ?? l.loadder_version ?? '',
+        mc: l.minecraft_version ?? '—'
+    };
+};
+const getInstanceSelectedKey = (cfg) => cfg?.instance_select ?? cfg?.instance_selct;
+const setInstanceSelectedKey = (cfg, name) => ({ ...(cfg || {}), instance_select: name });
 
 class Home {
     static id = 'home';
@@ -17,114 +28,98 @@ class Home {
         this.db = new database();
 
         this.$ = {
-            // Hero
             instanceHero: document.querySelector('.instance-hero'),
             instanceHeroName: document.querySelector('.instance-hero__name'),
             chipLoader: document.querySelector('.chip--loader'),
             chipVersion: document.querySelector('.chip--version'),
 
-            // Barra inferior
-            playerHead: document.querySelector('.player-head'),
-            playerNick: document.querySelector('.player-nick'),
-            playInstanceBtn: document.querySelector('.play-instance'),
-            instanceSelectBtn: document.querySelector('.instance-select'),
-            instancePopup: document.querySelector('.instance-popup'),
-            instancesListPopup: document.querySelector('.instances-List'),
-            instanceCloseBtn: document.querySelector('.close-popup'),
             infoBox: document.querySelector('.info-starting-game'),
             infoText: document.querySelector('.info-starting-game-text'),
             progressBar: document.querySelector('.progress-bar'),
+
+            railBtns: document.querySelectorAll('.rail-btn[data-target], .rail-btn[data-open-settings]'),
+            railSettings: document.querySelector('[data-open-settings]'),
+
+            paneHome: document.getElementById('pane-home'),
+            paneInstances: document.getElementById('pane-instances'),
+            instancesList: document.querySelector('.instances-List'),
+
+            playerNick: document.querySelector('.player-nick'),
+            playBtn: document.querySelector('.play-btn'),
             settingsBtn: document.querySelector('.settings-btn'),
         };
 
         this.$.settingsBtn?.addEventListener('click', () => changePanel('settings'));
+        this.$.railSettings?.addEventListener('click', () => changePanel('settings'));
+        this.$.playBtn?.addEventListener('click', () => this.startGame());
+
+        this.$.railBtns.forEach(btn => {
+            const target = btn.dataset.target;
+            btn.addEventListener('click', () => {
+                if (target === 'pane-instances') this.showInstancesPane();
+                else if (target === 'pane-home') this.showHomePane(btn);
+                else this.switchPane(target, btn);
+
+                // actualizar estado visual del rail
+                this.$.railBtns.forEach(b => b.classList.remove('is-active'));
+                if (target) btn.classList.add('is-active');
+
+                btn.animate([{ transform:'translateY(0)' },{ transform:'translateY(-2px)' },{ transform:'translateY(0)' }], { duration:180 });
+            });
+        });
+
+        // tooltips limpios
+        this.$.railBtns.forEach(btn => {
+            const tip = btn.getAttribute('aria-label') || btn.getAttribute('title') || '';
+            if (tip) btn.setAttribute('data-tip', tip);
+            btn.setAttribute('title', '');
+        });
 
         await this.populatePlayerInfo();
-        await this.setupInstanceSelector();
+        await this.prepareDataAndUI();
     }
 
-    /* ===== Info jugador ===== */
     async populatePlayerInfo() {
         const cfg = await this.db.readData('configClient');
         const acc = await this.db.readData('accounts', cfg?.account_selected);
         const nick = acc?.name || acc?.username || acc?.profile?.name || 'Jugador';
         if (this.$.playerNick) this.$.playerNick.textContent = nick;
-        // La cabeza ya la pinta tu flujo de login con utils.headplayer()
     }
 
-    /* ====== Helpers ====== */
+    async prepareDataAndUI() {
+        if (!config || typeof config.getInstanceList !== 'function') return console.error('[Home] config.getInstanceList no disponible');
+        const cfg = await this.db.readData('configClient');
+        const acc = await this.db.readData('accounts', cfg?.account_selected);
+        this.playerName = acc?.name || acc?.username || acc?.profile?.name;
+
+        this.instances = await config.getInstanceList();
+
+        let chosen = this.pickValidInstance(this.instances, getInstanceSelectedKey(cfg), this.playerName);
+        if (chosen) {
+            await setStatus(chosen.status);
+            this.renderHero(chosen);
+            await this.db.updateData('configClient', setInstanceSelectedKey(cfg, chosen.name));
+        } else {
+            this.renderHero({ name: 'Sin acceso', images: { hero: 'assets/images/instance-default.jpg' } });
+            this.$.playBtn?.setAttribute('disabled', 'true');
+        }
+
+        this.renderInstancesGrid(this.instances, chosen?.name);
+    }
+
     getInstanceImage(inst) {
-        return (
-            inst?.assets?.hero ||
-            inst?.images?.hero ||
-            inst?.hero ||
-            inst?.banner ||
-            inst?.image ||
-            'assets/images/instance-default.jpg'
-        );
+        return inst?.assets?.hero || inst?.images?.hero || inst?.hero || inst?.banner || inst?.image || 'assets/images/instance-default.jpg';
     }
 
     renderHero(inst) {
-        if (!this.$.instanceHero || !inst) return;
-        const img = this.getInstanceImage(inst);
-        this.$.instanceHero.style.backgroundImage = `url('${img}')`;
-
-        // Texto
+        const src = this.getInstanceImage(inst);
+        if (this.$.instanceHero) this.$.instanceHero.style.backgroundImage = `url('${src}')`;
         if (this.$.instanceHeroName) this.$.instanceHeroName.textContent = inst?.name ?? 'Instancia';
-        const loaderType = inst?.loadder?.loadder_type || 'Vanilla';
-        const loaderBuild = inst?.loadder?.loadder_version ? ` ${inst.loadder.loadder_version}` : '';
-        const mcVersion = inst?.loadder?.minecraft_version || '—';
-        if (this.$.chipLoader) this.$.chipLoader.textContent = (loaderType === 'none' ? 'Vanilla' : loaderType) + loaderBuild;
-        if (this.$.chipVersion) this.$.chipVersion.textContent = `MC ${mcVersion}`;
-    }
 
-    /* ===== Selector de instancias ===== */
-    async setupInstanceSelector() {
-        const cfg = await this.db.readData('configClient');
-        const auth = await this.db.readData('accounts', cfg?.account_selected);
-
-        if (!config || typeof config.getInstanceList !== 'function') {
-            console.error('[Home] config.getInstanceList no disponible');
-            return;
-        }
-
-        const instances = await config.getInstanceList();
-
-        let chosen = this.pickValidInstance(instances, cfg?.instance_selct, auth?.name);
-
-        if (!cfg || cfg.instance_selct !== chosen?.name) {
-            await this.db.updateData('configClient', { ...(cfg || {}), instance_selct: chosen?.name });
-        }
-        if (chosen) {
-            setStatus(chosen.status);
-            this.renderHero(chosen);
-        }
-
-        if (instances.length === 1) {
-            this.$.instanceSelectBtn?.classList.add('is-hidden');
-            this.$.playInstanceBtn && (this.$.playInstanceBtn.style.paddingRight = '0');
-        }
-
-        this.$.instanceSelectBtn?.addEventListener('click', () => {
-            this.renderInstancePopup(instances, chosen, auth?.name);
-            this.$.instancePopup.style.display = 'flex';
-            this.$.instancePopup.setAttribute('aria-hidden', 'false');
-            this.$.instancesListPopup.querySelector('.instance-card')?.focus();
-        });
-
-        const closePopup = () => {
-            this.$.instancePopup.style.display = 'none';
-            this.$.instancePopup.setAttribute('aria-hidden', 'true');
-        };
-        this.$.instanceCloseBtn?.addEventListener('click', closePopup);
-        this.$.instancePopup?.addEventListener('click', (e) => {
-            if (e.target.classList.contains('instance-popup')) closePopup();
-        });
-
-        this.$.playInstanceBtn?.addEventListener('click', (e) => {
-            if (e.target.closest('.instance-select')) return;
-            this.startGame();
-        });
+        const L = readLoader(inst);
+        const loaderText = (L.type === 'none' ? 'Vanilla' : L.type) + (L.version ? ` ${L.version}` : '');
+        this.$.chipLoader && (this.$.chipLoader.textContent = loaderText);
+        this.$.chipVersion && (this.$.chipVersion.textContent = `MC ${L.mc}`);
     }
 
     pickValidInstance(instances, desiredName, playerName) {
@@ -134,207 +129,212 @@ class Home {
             const inst = byName(desiredName);
             if (inst && canUse(inst)) return inst;
         }
-        return instances.find(canUse) || instances[0];
+        return instances.find(canUse);
     }
 
-    renderInstancePopup(instances, chosen, playerName) {
-        const list = this.$.instancesListPopup;
+    renderInstancesGrid(instances, activeName) {
+        const list = this.$.instancesList;
+        if (!list) return;
         list.innerHTML = '';
 
-        const canUse = (inst) => !inst.whitelistActive || inst.whitelist?.includes(playerName);
+        const arr = Array.isArray(instances) ? instances : [];
+        const canUse = (inst) => {
+            if (inst?.whitelistActive !== true) return true;
+            const wl = Array.isArray(inst?.whitelist) ? inst.whitelist : null;
+            if (!wl) return true;
+            if (!this.playerName) return false;
+            return wl.includes(this.playerName);
+        };
 
-        for (const inst of instances) {
-            if (!canUse(inst)) continue;
+        const usable = [], locked = [];
+        for (const inst of arr) (canUse(inst) ? usable : locked).push(inst);
 
+        const paint = (inst, { active = false, disabled = false } = {}) => {
+            const L = readLoader(inst);
             const card = document.createElement('div');
-            card.className = `instance-card${inst.name === chosen?.name ? ' active' : ''}`;
-            card.id = inst.name;
-            card.tabIndex = 0;
-            card.style.backgroundImage = `url('${this.getInstanceImage(inst)}')`;
+            card.className = `instance-card${active ? ' active-instance' : ''}${disabled ? ' is-locked' : ''}`;
+            card.setAttribute('tabindex', '0');
+            card.setAttribute('role', 'option');
+            card.setAttribute('aria-label', inst.name);
+            card.dataset.name = inst.name;
+            card.innerHTML = `
+        <div class="instance-card__bg" style="background-image:url('${this.getInstanceImage(inst)}')"></div>
+        <div class="instance-card__veil"></div>
+        <div class="instance-card__content">
+          <div class="instance-card__name">${this.escapeHTML(inst.name)}</div>
+          <div class="instance-card__tags">
+            <span class="tag">${this.escapeHTML(L.type === 'none' ? 'Vanilla' : L.type)}</span>
+            <span class="tag">MC ${this.escapeHTML(L.mc)}</span>
+          </div>
+        </div>
+      `;
+            const choose = async () => {
+                if (disabled) return;
+                const cfg = await this.db.readData('configClient');
+                await this.db.updateData('configClient', setInstanceSelectedKey(cfg, inst.name));
+                await setStatus(inst.status);
+                this.renderHero(inst);
+                list.querySelectorAll('.instance-card').forEach(n => n.classList.remove('active-instance'));
+                card.classList.add('active-instance');
+                card.animate([{boxShadow:'0 0 0 0 rgba(45,255,136,0)'},{boxShadow:'0 0 0 12px rgba(45,255,136,0)'}],{duration:420,easing:'cubic-bezier(.21,.98,.24,.99)'});
+            };
+            card.addEventListener('click', choose);
+            card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(); } });
 
-            const overlay = document.createElement('div');
-            overlay.className = 'instance-card__overlay';
-
-            const content = document.createElement('div');
-            content.className = 'instance-card__content';
-
-            const name = document.createElement('div');
-            name.className = 'instance-card__name';
-            name.textContent = inst.name;
-
-            const chips = document.createElement('div');
-            chips.className = 'instance-card__chips';
-
-            const chipLoader = document.createElement('span');
-            chipLoader.className = 'chip';
-            chipLoader.textContent = (inst?.loadder?.loadder_type || 'Vanilla') +
-                (inst?.loadder?.loadder_version ? ` ${inst.loadder.loadder_version}` : '');
-
-            const chipVersion = document.createElement('span');
-            chipVersion.className = 'chip';
-            chipVersion.textContent = `MC ${inst?.loadder?.minecraft_version || '—'}`;
-
-            chips.appendChild(chipLoader);
-            chips.appendChild(chipVersion);
-
-            content.appendChild(name);
-            content.appendChild(chips);
-
-            card.appendChild(overlay);
-            card.appendChild(content);
             list.appendChild(card);
+        };
+
+        usable.forEach(inst => paint(inst, { active: inst.name === activeName }));
+        locked.forEach(inst => paint(inst, { disabled: true }));
+
+        if (!usable.length && !locked.length) {
+            const empty = document.createElement('div');
+            empty.style.cssText = 'color:#9AA7C5;font-weight:800;padding:1rem;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.03);';
+            empty.textContent = 'No hay instancias disponibles.';
+            list.appendChild(empty);
         }
-
-        const choose = async (name) => {
-            const cfg = await this.db.readData('configClient');
-            const newInst = instances.find(i => i.name === name);
-            if (!newInst) return;
-
-            cfg.instance_selct = newInst.name;
-            await this.db.updateData('configClient', cfg);
-            await setStatus(newInst.status);
-            this.renderHero(newInst);
-
-            list.querySelectorAll('.instance-card').forEach(n => n.classList.remove('active'));
-            list.querySelector(`#${CSS.escape(name)}`)?.classList.add('active');
-
-            this.$.instancePopup.style.display = 'none';
-            this.$.instancePopup.setAttribute('aria-hidden', 'true');
-        };
-
-        list.onclick = (e) => {
-            const el = e.target.closest('.instance-card');
-            if (el) choose(el.id);
-        };
-        list.onkeydown = (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                const el = e.target.closest('.instance-card');
-                if (el) { e.preventDefault(); choose(el.id); }
-            }
-        };
     }
 
-    /* ===== Lanzamiento ===== */
-    async startGame() {
-        const launch = new Launch();
-        const configClient = await this.db.readData('configClient');
+    /* ======= NAV ======= */
+    switchPane(targetId, btn = null) {
+        const panes = [this.$.paneHome, this.$.paneInstances].filter(Boolean);
+        const current = panes.find(p => p?.classList.contains('is-active'));
+        const next = panes.find(p => p?.id === targetId);
+        if (!next || next === current) return;
 
-        if (!config || typeof config.getInstanceList !== 'function') {
-            console.error('[Home] config.getInstanceList no disponible');
-            return;
+        if (current) {
+            current.animate([{opacity:1, transform:'none'}, {opacity:0, transform:'translateY(8px) scale(.995)'}], {duration:160, easing:'ease-out'})
+                .onfinish = () => {
+                current.hidden = true; current.classList.remove('is-active');
+                next.hidden = false; next.classList.add('is-active');
+                next.animate([{opacity:0, transform:'translateY(-8px) scale(.995)'}, {opacity:1, transform:'none'}], {duration:200, easing:'cubic-bezier(.21,.98,.24,.99)'});
+            };
+        } else {
+            next.hidden = false; next.classList.add('is-active');
         }
 
-        const instances = await config.getInstanceList();
-        const authenticator = await this.db.readData('accounts', configClient.account_selected);
-        const options = instances.find(i => i.name === configClient.instance_selct);
-        if (!options) return;
+        this.$.railBtns.forEach(b => b.classList.toggle('is-active', b.dataset.target === targetId));
+        btn?.animate([{ transform:'translateY(0)' },{ transform:'translateY(-2px)' },{ transform:'translateY(0)' }], { duration:180 });
+    }
 
+    async showHomePane(btn){
+        try {
+            if (!this.instances?.length && config?.getInstanceList) this.instances = await config.getInstanceList();
+            const cfg = await this.db.readData('configClient');
+            const chosen = (this.instances || []).find(i => i.name === getInstanceSelectedKey(cfg)) || this.instances?.[0];
+            if (chosen) this.renderHero(chosen);
+        } catch(e){ console.error(e); }
+        this.switchPane('pane-home', btn);
+    }
+
+    async showInstancesPane(){
+        try {
+            const cfg = await this.db.readData('configClient');
+            if (config?.getInstanceList) this.instances = await config.getInstanceList();
+            this.renderInstancesGrid(this.instances, getInstanceSelectedKey(cfg));
+        } catch (e){ console.error(e); }
+        this.switchPane('pane-instances');
+        requestAnimationFrame(() => this.$.instancesList?.querySelector('.instance-card')?.focus());
+    }
+
+    /* ======= Launch ======= */
+    async startGame() {
+        const cfg = await this.db.readData('configClient');
+        const chosenName = getInstanceSelectedKey(cfg);
+        if (!config || typeof config.getInstanceList !== 'function') return;
+
+        const instances = await config.getInstanceList();
+        const options = instances.find(i => i.name === chosenName);
+        if (!options) return new popup().openPopup({ title: 'Instancia no seleccionada', content: 'Ve a la pestaña Instancias y elige una.', color: 'yellow', options: true });
+
+        const authenticator = await this.db.readData('accounts', cfg?.account_selected);
+        if (!authenticator) return new popup().openPopup({ title:'Sesión requerida', content:'Inicia sesión antes de jugar.', color:'red', options:true });
+
+        const L = readLoader(options);
         const opt = {
             url: options.url,
             authenticator,
             timeout: 10000,
             path: `${await appdata()}/${process.platform === 'darwin' ? this.config.dataDirectory : `.${this.config.dataDirectory}`}`,
             instance: options.name,
-            version: options.loadder.minecraft_version,
-            detached: configClient.launcher_config.closeLauncher === "close-all" ? false : true,
-            downloadFileMultiple: configClient.launcher_config.download_multi,
-            intelEnabledMac: configClient.launcher_config.intelEnabledMac,
-            loader: {
-                type: options.loadder.loadder_type,
-                build: options.loadder.loadder_version,
-                enable: options.loadder.loadder_type !== 'none'
-            },
+            version: L.mc,
+            detached: cfg?.launcher_config?.closeLauncher !== "close-all",
+            downloadFileMultiple: cfg?.launcher_config?.download_multi,
+            intelEnabledMac: cfg?.launcher_config?.intelEnabledMac,
+            loader: { type: L.type, build: L.version, enable: L.type !== 'none' },
             verify: options.verify,
             ignored: [...(options.ignored || [])],
-            java: { path: configClient.java_config.java_path },
+            java: { path: cfg?.java_config?.java_path },
             JVM_ARGS: options.jvm_args || [],
             GAME_ARGS: options.game_args || [],
-            screen: {
-                width: configClient.game_config.screen_size.width,
-                height: configClient.game_config.screen_size.height
-            },
-            memory: {
-                min: `${configClient.java_config.java_memory.min * 1024}M`,
-                max: `${configClient.java_config.java_memory.max * 1024}M`
-            }
+            screen: { width: cfg?.game_config?.screen_size?.width, height: cfg?.game_config?.screen_size?.height },
+            memory: { min: `${(cfg?.java_config?.java_memory?.min ?? 2) * 1024}M`, max: `${(cfg?.java_config?.java_memory?.max ?? 4) * 1024}M` }
         };
 
-        const btn = this.$.playInstanceBtn;
+        // === Mostrar estado de descarga en el footer ===
+        const btn = this.$.playBtn;
         const box = this.$.infoBox;
         const text = this.$.infoText;
         const bar = this.$.progressBar;
 
-        launch.Launch(opt);
-
+        btn.disabled = true;
         btn.style.display = "none";
         box.style.display = "block";
         bar.style.display = "";
+        bar.value = 0; bar.max = 0;
+        text.textContent = 'Preparando…';
+
         ipcRenderer.send('main-window-progress-load');
 
-        launch.on('progress', (progress, size) => {
-            text.innerHTML = `Descargando ${((progress / size) * 100).toFixed(0)}%`;
-            ipcRenderer.send('main-window-progress', { progress, size });
-            bar.value = progress; bar.max = size;
+        const throttle = (() => { let t=0; return (cb)=>{ const n=performance.now(); if(n-t>66){ t=n; cb(); } }; })();
+
+        const launch = new Launch();
+        launch.Launch(opt);
+
+        launch.on('progress', (p, s) => {
+            const pct = ((p/s)*100).toFixed(0);
+            text.innerHTML = `Descargando ${pct}%`;
+            bar.value = p; bar.max = s;
+            throttle(() => ipcRenderer.send('main-window-progress', { progress: p, size: s }));
         });
-        launch.on('check', (progress, size) => {
-            text.innerHTML = `Verificando ${((progress / size) * 100).toFixed(0)}%`;
-            ipcRenderer.send('main-window-progress', { progress, size });
-            bar.value = progress; bar.max = size;
+        launch.on('check', (p, s) => {
+            const pct = ((p/s)*100).toFixed(0);
+            text.innerHTML = `Verificando ${pct}%`;
+            bar.value = p; bar.max = s;
+            throttle(() => ipcRenderer.send('main-window-progress', { progress: p, size: s }));
         });
         launch.on('patch', () => {
             ipcRenderer.send('main-window-progress-load');
             text.innerHTML = `Aplicando patch...`;
         });
         launch.on('data', () => {
+            // Juego arrancando
             bar.style.display = "none";
-            if (configClient.launcher_config.closeLauncher === 'close-launcher') {
-                ipcRenderer.send("main-window-hide");
-            }
+            text.innerHTML = `Iniciando juego...`;
+            if (cfg?.launcher_config?.closeLauncher === 'close-launcher') ipcRenderer.send("main-window-hide");
             new logger('Minecraft', '#36b030');
             ipcRenderer.send('main-window-progress-load');
-            text.innerHTML = `Iniciando juego...`;
         });
-        launch.on('close', () => {
-            if (configClient.launcher_config.closeLauncher === 'close-launcher') {
-                ipcRenderer.send("main-window-show");
-            }
+        const restoreUI = () => {
             ipcRenderer.send('main-window-progress-reset');
             box.style.display = "none";
-            btn.style.display = "flex";
-            text.innerHTML = `Verificación`;
-            new logger(pkg.name, '#7289da');
-        });
+            btn.style.display = "inline-flex";
+            btn.disabled = false;
+            text.innerHTML = `Conectando…`;
+            bar.style.display = "";
+            bar.value = 0; bar.max = 0;
+        };
+        launch.on('close', restoreUI);
         launch.on('error', err => {
-            const popupError = new popup();
-            popupError.openPopup({
-                title: 'Error',
-                content: err.error,
-                color: 'red',
-                options: true
-            });
-            if (configClient.launcher_config.closeLauncher === 'close-launcher') {
-                ipcRenderer.send("main-window-show");
-            }
-            ipcRenderer.send('main-window-progress-reset');
-            box.style.display = "none";
-            btn.style.display = "flex";
-            text.innerHTML = `Verificación`;
-            new logger(pkg.name, '#7289da');
+            const msg = err?.error || err?.stack || err?.message || String(err);
+            new popup().openPopup({ title:'Error', content: msg, color:'red', options:true });
+            if (cfg?.launcher_config?.closeLauncher === 'close-launcher') ipcRenderer.send("main-window-show");
+            restoreUI();
             console.error(err);
         });
     }
 
-    /* ===== Utils menores ===== */
-    fmtDate(e) {
-        const date = new Date(e);
-        const allMonth = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-        return { year: date.getFullYear(), month: allMonth[date.getMonth()], day: date.getDate() };
-    }
-    escapeHTML(str = "") {
-        return str.replace(/[&<>'"]/g, c => ({
-            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-        }[c]));
-    }
+    escapeHTML(str=""){ return str.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
 }
 
 export default Home;
