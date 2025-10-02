@@ -1,17 +1,36 @@
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="Content-Security-Policy" content="script-src 'self';">
-        <link rel="stylesheet" href="assets/css/index.css">
-    </head>
-    <body>
-        <div id="splash" style="display:none">
-            <img class="splash" src="assets/images/icon.png" />
-            <p class="splash-message"></p>
-            <p class="splash-author"><span class="author"></span></p>
-            <p class="message">Recherche de mise à jour...</p>
-            <progress value="0" max="0" class="progress"></progress>
+<!doctype html>
+<html lang="es-MX">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self';" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HyLegacy — Inicio</title>
+    <link rel="stylesheet" href="assets/css/index.css" />
+</head>
+<body>
+<!-- Contenedor Splash -->
+<main id="splash" class="splash" hidden>
+    <section class="splash__card" role="status" aria-live="polite" aria-atomic="true">
+        <img class="splash__logo" src="assets/images/icon.png" alt="Logo" draggable="false" />
+
+        <div class="splash__text">
+            <p class="splash-message" id="splashMessage" aria-label="frase motivacional"></p>
+            <p class="splash-author"><span class="author" id="splashAuthor"></span></p>
+            <p class="message" id="statusMessage">Buscando actualización…</p>
         </div>
-        <script src="assets/js/index.js" type="module"></script>
-    </body>
+
+        <!-- Botón de descarga (mac/linux) -->
+        <button class="download-update" id="downloadButton" type="button" hidden>
+            Descargar actualización
+        </button>
+
+        <div class="splash__progress">
+            <progress value="0" max="0" class="progress" id="progressBar" aria-label="Progreso de descarga"></progress>
+            <span class="progress__label" id="progressLabel"></span>
+        </div>
+    </section>
+</main>
+
+<script src="assets/js/index.js" type="module"></script>
+</body>
 </html>

@@ -1,129 +1,167 @@
 @import "font.css";
-@import 'theme.css';
+@import "theme.css";
 
-body {
-    background-color: var(--background);
-    font-family: "Poppins";
-    letter-spacing: 0px;
+/* ====== Reset & base ====== */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+:root{
+    /* Colores desde theme.css:
+       --background, --color, --element-color */
+    --ring: 0 0 0 2px rgba(255,255,255,.08);
+    --panel: rgba(255,255,255,.06);
+    --panel-strong: rgba(255,255,255,.12);
+    --radius: 18px;
+
+    --neon: #2DFF88;
+    --neon-2: #1BCB68;
+    --glow: 0 0 12px rgba(45,255,136,.35), 0 0 24px rgba(45,255,136,.18);
 }
 
-img {
-    -webkit-user-drag: none;
-    user-select: none;
+html, body {
+    height: 100%;
+    background: var(--background);
+    color: var(--color);
+    font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    letter-spacing: 0;
 }
 
+/* ====== Splash layout ====== */
 .splash {
-    position: absolute;
-    top: 180px;
-    left: 50%;
-    transform: translate(-50%);
-    width: 140px;
-    height: 140px;
-    transition: opacity .3s, top 1.5s;
+    min-height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background:
+            radial-gradient(1200px 800px at 50% -10%, rgba(255,255,255,0.04), transparent 60%),
+            var(--background);
+}
+
+.splash__card{
+    width: min(520px, 92vw);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,.08);
+    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    box-shadow: 0 24px 48px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
+    padding: 28px 24px;
+    display: grid;
+    justify-items: center;
+    gap: 18px;
     opacity: 0;
+    transform: translateY(14px) scale(.995);
+    animation: cardIn .36s cubic-bezier(.21,.98,.24,.99) .12s both;
 }
 
-.splash.opacity {
-    opacity: 1;
+@keyframes cardIn {
+    to { opacity:1; transform:none; }
 }
 
-.splash.translate {
-    top: 129px;
+.splash__logo{
+    width: 128px; height: 128px;
+    user-select: none; -webkit-user-drag: none;
+    filter: drop-shadow(0 8px 24px rgba(0,0,0,.4));
+    animation: float 3.6s ease-in-out infinite;
 }
 
-.splash-message {
-    position: absolute;
-    top: 289px;
-    left: 0px;
-    width: 400px;
-    font: normal normal bold 19px/29px Poppins;
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+}
+
+.splash__text{
     text-align: center;
-    letter-spacing: 0px;
-    transition: opacity 1.5s;
-    color: var(--color);
+    display: grid; gap: 6px;
+}
+
+.splash-message{
+    font-weight: 800;
+    font-size: clamp(18px, 3.8vw, 22px);
+    line-height: 1.35;
     opacity: 0;
+    transform: translateY(6px);
+    animation: fadeUp .42s ease .24s both;
 }
-
-.splash-message.opacity {
-    opacity: 1;
-}
-
-.splash-author {
-    position: absolute;
-    top: 326px;
-    left: 0px;
-    width: 400px;
-    text-align: center;
-    transition: opacity 1.5s;
-    font: normal normal normal 9px/13px Poppins;
-    color: var(--color);
+.splash-author{
     opacity: 0;
+    animation: fade .4s ease .36s forwards;
+    font-size: 12px;
+    color: rgba(255,255,255,.8);
 }
+.splash-author .author{ font-weight: 800; }
 
-.splash-author .author {
-    font: normal normal bold 9px/13px Poppins;
-}
-
-.splash-author.opacity {
-    opacity: 1;
-}
-
-.message {
-    position: absolute;
-    top: 347px;
-    left: 0px;
-    width: 400px;
-    text-align: center;
-    transition: opacity 1.5s;
-    font: normal normal bold 18px/27px Poppins;
-    color: var(--color);
+.message{
+    font-weight: 800;
+    font-size: clamp(16px, 3.2vw, 18px);
     opacity: 0;
+    transform: translateY(6px);
+    animation: fadeUp .42s ease .44s both;
 }
 
-.download-update {
-    position: absolute;
-    left: 25%;
-    margin-top: 20px;
-    width: 200px;
-    font: normal normal bold 22px / 45px Poppins;
-    color: var(--color);
-    border: 2px solid var(--color);
-    border-radius: 15px;
-    transition: background-color .2s, color .2s;
+@keyframes fadeUp{ to{ opacity:1; transform:none; } }
+@keyframes fade{ to{ opacity:1; } }
+
+/* ====== Download button (mac/linux) ====== */
+.download-update{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.18);
+    background: linear-gradient(135deg, var(--neon), var(--neon-2));
+    color: #03140A;
+    font-weight: 1000;
+    letter-spacing: .3px;
+    box-shadow: var(--glow), inset 0 0 0 1px rgba(255,255,255,.22);
+    transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+}
+.download-update:hover{ filter: brightness(1.02) contrast(1.05); transform: translateY(-1px); }
+.download-update:active{ transform: translateY(1px) scale(.995); }
+
+/* ====== Progress ====== */
+.splash__progress{
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+    width: 100%;
 }
 
-.download-update:hover {
-    background-color: var(--color);
-    color: var(--background);
-    cursor: pointer;
-}
-
-.message.opacity {
-    opacity: 1;
-}
-
-.progress {
-    position: absolute;
-    top: 410px;
-    left: 106px;
-    width: 189px;
-    height: 10px;
+.progress{
+    width: min(360px, 86%);
+    height: 12px;
     appearance: none;
-    transition: opacity .2s;
-    opacity: 0;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.18);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    transition: opacity .2s ease;
+    opacity: 0; /* visible cuando hay descarga */
 }
 
-.show {
-    opacity: 1;
+.progress.show{ opacity: 1; }
+
+.progress::-webkit-progress-bar{
+    background-color: rgba(255,255,255,.06);
+    border-radius: 999px;
 }
 
-.progress::-webkit-progress-bar {
-    background-color: var(--background);
-    border: solid 1px var(--element-color);
-    border-radius: 10px;
+.progress::-webkit-progress-value{
+    background: linear-gradient(135deg, var(--neon), var(--neon-2));
+    border-radius: 999px;
+    box-shadow: var(--glow);
 }
 
-.progress::-webkit-progress-value {
-    background-color: var(--element-color);
-    border-radius: 10px;
+.progress__label{
+    font-size: 12px;
+    color: rgba(255,255,255,.8);
+    min-height: 1em;
+}
+
+/* ====== Accesibilidad: reducir movimiento ====== */
+@media (prefers-reduced-motion: reduce){
+    .splash__logo{ animation: none !important; }
+    .splash__card, .splash-message, .message, .splash-author { animation: none !important; opacity: 1 !important; transform: none !important; }
 }
