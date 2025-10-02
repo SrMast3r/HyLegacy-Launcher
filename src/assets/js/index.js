@@ -53,92 +53,57 @@ class Splash {
     async checkUpdate() {
         this.setStatus(`Recherche de mise à jour...`);
 
-        try {
-            const res = await ipcRenderer.invoke('update-app');
-            // res puede indicar update/no-update según electron-updater;
-            // aquí no necesitas hacer nada: te guías por los eventos de abajo.
-        } catch (err) {
-            const msg = err?.message || String(err);
-            return this.shutdown(`erreur lors de la recherche de mise à jour :<br>${msg}`);
-        }
+        ipcRenderer.invoke('update-app').then().catch(err => {
+            return this.shutdown(`erreur lors de la recherche de mise à jour :<br>${err.message}`);
+        });
 
-        ipcRenderer.once('updateAvailable', () => {
+        ipcRenderer.on('updateAvailable', () => {
             this.setStatus(`Mise à jour disponible !`);
-            if (os.platform() === 'win32') {
+            if (os.platform() == 'win32') {
                 this.toggleProgress();
                 ipcRenderer.send('start-update');
-            } else {
-                return this.dowloadUpdate();
             }
-        });
+            else return this.dowloadUpdate();
+        })
 
-        ipcRenderer.once('error', (_event, err) => {
-            const msg = err?.message || String(err);
-            return this.shutdown(`${msg}`);
-        });
+        ipcRenderer.on('error', (event, err) => {
+            if (err) return this.shutdown(`${err.message}`);
+        })
 
-        ipcRenderer.once('download-progress', (_event, progress) => {
-            ipcRenderer.send('update-window-progress', { progress: progress.transferred, size: progress.total });
+        ipcRenderer.on('download-progress', (event, progress) => {
+            ipcRenderer.send('update-window-progress', { progress: progress.transferred, size: progress.total })
             this.setProgress(progress.transferred, progress.total);
-        });
+        })
 
-        ipcRenderer.once('update-not-available', () => {
+        ipcRenderer.on('update-not-available', () => {
             console.error("Mise à jour non disponible");
             this.maintenanceCheck();
-        });
+        })
     }
 
-
-    getLatestReleaseForOS(osTokenList, preferredFormat, assets) {
-        const tokens = Array.isArray(osTokenList) ? osTokenList : [osTokenList];
-        return assets
-            .filter(a => {
-                const name = (a.name || '').toLowerCase();
-                const matchOS = tokens.some(t => name.includes(t));
-                const matchFormat = name.endsWith(preferredFormat);
-                return matchOS && matchFormat;
-            })
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+    getLatestReleaseForOS(os, preferredFormat, asset) {
+        return asset.filter(asset => {
+            const name = asset.name.toLowerCase();
+            const isOSMatch = name.includes(os);
+            const isFormatMatch = name.endsWith(preferredFormat);
+            return isOSMatch && isFormatMatch;
+        }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
     }
 
     async dowloadUpdate() {
-        const repo = pkg.repository?.url
-            ?.replace("git+", "")
-            ?.replace(".git", "")
-            ?.replace("https://github.com/", "")
-            ?.split("/");
-        if (!repo || repo.length < 2) {
-            return this.shutdown("Configuration du dépôt GitHub invalide.");
-        }
+        const repoURL = pkg.repository.url.replace("git+", "").replace(".git", "").replace("https://github.com/", "").split("/");
+        const githubAPI = await nodeFetch('https://api.github.com').then(res => res.json()).catch(err => err);
 
-        let apiRoot, repoAPI, releases;
-        try {
-            apiRoot = await nodeFetch('https://api.github.com').then(r => r.json());
-            const repoURL = apiRoot.repository_url
-                .replace("{owner}", repo[0])
-                .replace("{repo}", repo[1]);
-            repoAPI = await nodeFetch(repoURL).then(r => r.json());
-            releases = await nodeFetch(repoAPI.releases_url.replace("{/id}", '')).then(r => r.json());
-        } catch (e) {
-            const msg = e?.message || String(e);
-            return this.shutdown(`Erreur GitHub API :<br>${msg}`);
-        }
+        const githubAPIRepoURL = githubAPI.repository_url.replace("{owner}", repoURL[0]).replace("{repo}", repoURL[1]);
+        const githubAPIRepo = await nodeFetch(githubAPIRepoURL).then(res => res.json()).catch(err => err);
 
-        const latestRelease = (releases?.[0]?.assets) || [];
+        const releases_url = await nodeFetch(githubAPIRepo.releases_url.replace("{/id}", '')).then(res => res.json()).catch(err => err);
+        const latestRelease = releases_url[0].assets;
         let latest;
 
-        if (os.platform() === 'darwin') {
-            latest = this.getLatestReleaseForOS(['mac', 'darwin'], '.dmg', latestRelease);
-        } else if (os.platform() === 'linux') {
-            latest = this.getLatestReleaseForOS('linux', '.appimage', latestRelease);
-        } else {
-            // Windows no usa descarga manual aquí; se maneja por autoUpdater
-            return this.shutdown("Plateforme non prise en charge pour le téléchargement manuel.");
-        }
+        if (os.platform() == 'darwin') latest = this.getLatestReleaseForOS('mac', '.dmg', latestRelease);
+        else if (os == 'linux') latest = this.getLatestReleaseForOS('linux', '.appimage', latestRelease);
 
-        if (!latest) {
-            return this.shutdown("Aucun binaire de mise à jour trouvé pour votre plateforme.");
-        }
 
         this.setStatus(`Mise à jour disponible !<br><div class="download-update">Télécharger</div>`);
         document.querySelector(".download-update").addEventListener("click", () => {
@@ -146,7 +111,6 @@ class Splash {
             return this.shutdown("Téléchargement en cours...");
         });
     }
-
 
 
     async maintenanceCheck() {

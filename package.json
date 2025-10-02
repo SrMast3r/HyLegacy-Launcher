@@ -1,7 +1,7 @@
 {
   "name": "hyl-client",
   "preductname": "HyLegacy Client",
-  "version": "2.1.11",
+  "version": "2.1.12",
   "description": "",
   "main": "src/app.js",
   "author": {
