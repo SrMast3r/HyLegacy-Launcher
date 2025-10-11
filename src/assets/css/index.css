@@ -1,167 +1,123 @@
 @import "font.css";
 @import "theme.css";
 
-/* ====== Reset & base ====== */
-*,
-*::before,
-*::after { box-sizing: border-box; }
-
-:root{
-    /* Colores desde theme.css:
-       --background, --color, --element-color */
-    --ring: 0 0 0 2px rgba(255,255,255,.08);
-    --panel: rgba(255,255,255,.06);
-    --panel-strong: rgba(255,255,255,.12);
-    --radius: 18px;
-
-    --neon: #2DFF88;
-    --neon-2: #1BCB68;
-    --glow: 0 0 12px rgba(45,255,136,.35), 0 0 24px rgba(45,255,136,.18);
-}
-
+/* ===== No scroll en ningún caso ===== */
 html, body {
-    height: 100%;
+    height: 100vh;
+    margin: 0;
+    overflow: hidden !important;
     background: var(--background);
     color: var(--color);
-    font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    letter-spacing: 0;
+    font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
 }
+* { box-sizing: border-box; }
+::-webkit-scrollbar { width: 0; height: 0; }
 
-/* ====== Splash layout ====== */
-.splash {
-    min-height: 100%;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-    background:
-            radial-gradient(1200px 800px at 50% -10%, rgba(255,255,255,0.04), transparent 60%),
-            var(--background);
+/* ===== Fondo decorativo seguro ===== */
+.bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.blob {
+    position: absolute; filter: blur(60px); opacity: .32; will-change: transform;
+    animation: float 12s ease-in-out infinite alternate;
 }
-
-.splash__card{
-    width: min(520px, 92vw);
-    border-radius: var(--radius);
-    border: 1px solid rgba(255,255,255,.08);
-    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-    box-shadow: 0 24px 48px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
-    padding: 28px 24px;
-    display: grid;
-    justify-items: center;
-    gap: 18px;
-    opacity: 0;
-    transform: translateY(14px) scale(.995);
-    animation: cardIn .36s cubic-bezier(.21,.98,.24,.99) .12s both;
+.blob.b1 { width: 40vmax; height: 40vmax; left: -12vmax; top: -10vmax;
+    background: color-mix(in srgb, var(--element-color) 32%, transparent); }
+.blob.b2 { width: 36vmax; height: 36vmax; right: -10vmax; bottom: -8vmax;
+    background: color-mix(in srgb, #6ae 28%, transparent); animation-delay: .8s; }
+.grid { position: absolute; inset: 0;
+    background-image:
+            linear-gradient(to right, color-mix(in srgb, var(--color) 6%, transparent) 1px, transparent 1px),
+            linear-gradient(to bottom, color-mix(in srgb, var(--color) 6%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px; opacity: .08;
 }
-
-@keyframes cardIn {
-    to { opacity:1; transform:none; }
-}
-
-.splash__logo{
-    width: 128px; height: 128px;
-    user-select: none; -webkit-user-drag: none;
-    filter: drop-shadow(0 8px 24px rgba(0,0,0,.4));
-    animation: float 3.6s ease-in-out infinite;
-}
-
 @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
+    from { transform: translate3d(0,0,0) }
+    to   { transform: translate3d(2vmax,-1.5vmax,0) }
 }
 
-.splash__text{
-    text-align: center;
-    display: grid; gap: 6px;
+/* ===== Splash centrado ===== */
+.splash {
+    position: fixed; inset: 0; z-index: 1;
+    display: grid; place-items: center; padding: 16px;
+    opacity: 0; transition: opacity .28s ease;
+}
+.splash.show { opacity: 1; }
+
+/* ===== Tarjeta compacta (cabe en ventanita) ===== */
+.card {
+    width: min(520px, 92vw);
+    max-height: 92vh;               /* ✅ nunca desborda */
+    overflow: hidden;               /* ✅ evita scroll interno */
+    padding: 24px 22px 18px;
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--background) 80%, transparent);
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    box-shadow:
+            0 18px 50px rgba(0,0,0,.45),
+            inset 0 0 0 1px color-mix(in srgb, var(--element-color) 14%, transparent);
+    display: grid; justify-items: center; gap: 12px;
 }
 
-.splash-message{
-    font-weight: 800;
-    font-size: clamp(18px, 3.8vw, 22px);
-    line-height: 1.35;
-    opacity: 0;
-    transform: translateY(6px);
-    animation: fadeUp .42s ease .24s both;
-}
-.splash-author{
-    opacity: 0;
-    animation: fade .4s ease .36s forwards;
-    font-size: 12px;
-    color: rgba(255,255,255,.8);
-}
-.splash-author .author{ font-weight: 800; }
-
-.message{
-    font-weight: 800;
-    font-size: clamp(16px, 3.2vw, 18px);
-    opacity: 0;
-    transform: translateY(6px);
-    animation: fadeUp .42s ease .44s both;
+/* ===== Logo ===== */
+.logo {
+    width: clamp(72px, 14vmin, 96px);
+    height: clamp(72px, 14vmin, 96px);
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.35))
+    drop-shadow(0 0 24px color-mix(in srgb, var(--element-color) 35%, transparent));
+    user-select: none; -webkit-user-drag: none;
 }
 
-@keyframes fadeUp{ to{ opacity:1; transform:none; } }
-@keyframes fade{ to{ opacity:1; } }
+/* ===== Texto ===== */
+.text { text-align: center; display: grid; gap: 4px; max-width: 46ch; }
+.headline { margin: 4px 0 0; font-size: 18px; font-weight: 800; }
+.quote { margin: 0; font-weight: 700; font-size: 16px; display:none; } /* oculto por look pro */
+.author { margin: 0; font-size: 12px; opacity: .75; display:none; }   /* oculto por look pro */
+.status { margin: 2px 0 0; font-weight: 700; font-size: 15px; opacity: .95; }
+.substatus { margin: 0; font-size: 12px; opacity: .72; }
 
-/* ====== Download button (mac/linux) ====== */
-.download-update{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: .5rem;
-    min-height: 44px;
-    padding: 0 18px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.18);
-    background: linear-gradient(135deg, var(--neon), var(--neon-2));
-    color: #03140A;
-    font-weight: 1000;
-    letter-spacing: .3px;
-    box-shadow: var(--glow), inset 0 0 0 1px rgba(255,255,255,.22);
-    transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+/* ===== Botón de descarga ===== */
+.btn {
+    margin-top: 4px; padding: 10px 18px; font-size: 16px; font-weight: 800;
+    border-radius: 14px; border: 1px solid var(--element-color);
+    color: var(--background); background: var(--element-color);
+    cursor: pointer; transition: transform .06s ease, filter .2s ease, box-shadow .2s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
 }
-.download-update:hover{ filter: brightness(1.02) contrast(1.05); transform: translateY(-1px); }
-.download-update:active{ transform: translateY(1px) scale(.995); }
+.btn:hover { filter: brightness(1.06); }
+.btn:active { transform: translateY(1px); }
 
-/* ====== Progress ====== */
-.splash__progress{
-    display: grid;
-    gap: 8px;
-    justify-items: center;
-    width: 100%;
+/* ===== Progreso ===== */
+.progress-wrap {
+    display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+    width: 100%; margin-top: 4px;
+    opacity: 0; transition: opacity .2s ease;
 }
+.progress-wrap.show { opacity: 1; } /* ✅ JS añade esta clase */
 
-.progress{
-    width: min(360px, 86%);
-    height: 12px;
-    appearance: none;
-    border-radius: 999px;
-    background: transparent;
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
-    transition: opacity .2s ease;
-    opacity: 0; /* visible cuando hay descarga */
+.progress {
+    appearance: none; width: 100%; height: 12px; border: none; border-radius: 999px; background: transparent;
 }
-
-.progress.show{ opacity: 1; }
-
-.progress::-webkit-progress-bar{
-    background-color: rgba(255,255,255,.06);
+.progress::-webkit-progress-bar {
+    background: color-mix(in srgb, var(--background) 70%, #000);
+    border: 1px solid color-mix(in srgb, var(--element-color) 30%, transparent);
     border-radius: 999px;
 }
-
-.progress::-webkit-progress-value{
-    background: linear-gradient(135deg, var(--neon), var(--neon-2));
+.progress::-webkit-progress-value {
+    background: var(--element-color);
     border-radius: 999px;
-    box-shadow: var(--glow);
+}
+.progress-label {
+    min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; opacity: .9;
 }
 
-.progress__label{
-    font-size: 12px;
-    color: rgba(255,255,255,.8);
-    min-height: 1em;
-}
+/* ===== Nota ===== */
+.footnote { margin: 2px 0 0; font-size: 11px; opacity: .55; }
 
-/* ====== Accesibilidad: reducir movimiento ====== */
-@media (prefers-reduced-motion: reduce){
-    .splash__logo{ animation: none !important; }
-    .splash__card, .splash-message, .message, .splash-author { animation: none !important; opacity: 1 !important; transform: none !important; }
+/* Light tweak */
+body.light .card {
+    background: color-mix(in srgb, #ffffff 72%, transparent);
+    box-shadow:
+            0 18px 50px rgba(0,0,0,.18),
+            inset 0 0 0 1px color-mix(in srgb, var(--element-color) 20%, transparent);
 }

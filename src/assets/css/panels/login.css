@@ -12,21 +12,21 @@ html, body { height:100%; margin:0; overflow:hidden; }
     --radius: 16px;
 }
 
+/* Fondo y centrado */
 .login {
     min-height:100vh;
     display:grid; place-items:center;
     background: var(--background);
 }
 
+/* Contenedor general */
 .login .container{
-    /* el wrapper ocupa toda la vista, pero sin scroll */
     width: min(560px, 92vw);
-    height: auto;
     display:grid; place-items:center;
     padding: 0 12px;
 }
 
-/* Tarjeta (misma vibra que tu UI) */
+/* Tarjetas */
 .login-tabs{
     display:none;
     width:100%;
@@ -37,11 +37,13 @@ html, body { height:100%; margin:0; overflow:hidden; }
     padding: 22px 20px;
     text-align:center;
 
-    opacity:0; transform: translateY(10px) scale(.995);
-    transition: opacity .22s ease, transform .22s cubic-bezier(.21,.98,.24,.99);
+    opacity:0;
+    transform: translateY(10px) scale(.995);
+    transition: opacity .25s ease, transform .25s cubic-bezier(.21,.98,.24,.99);
 }
 .login-tabs.is-active{ display:block; opacity:1; transform:none; }
 
+/* Título */
 .login-text{
     margin: 4px 0 12px;
     color: var(--color);
@@ -49,12 +51,13 @@ html, body { height:100%; margin:0; overflow:hidden; }
     font-size: clamp(1.1rem, 2.8vw, 1.35rem);
 }
 
+/* Inputs */
 .input-login{
     display:grid; gap:10px; justify-items:center; margin: 8px 0 2px;
 }
 .input-login .email,
 .input-login .password,
-.A2F{
+.input-login .A2F{
     width:min(460px, 86%);
     color: var(--color);
     background: rgba(255,255,255,.05);
@@ -71,13 +74,17 @@ html, body { height:100%; margin:0; overflow:hidden; }
     background: rgba(255,255,255,.07);
 }
 
+/* Botones */
 .login-options{
     display:flex; justify-content:center; gap:12px; flex-wrap:wrap;
     margin: 14px 0 4px;
 }
 .connect, .cancel{
     appearance:none; border:none; cursor:pointer;
-    padding:.7rem 2rem; border-radius:14px; font-weight:1000; letter-spacing:.3px;
+    padding:.7rem 2rem;
+    border-radius:14px;
+    font-weight:1000;
+    letter-spacing:.3px;
     transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
 }
 .connect{
@@ -90,7 +97,10 @@ html, body { height:100%; margin:0; overflow:hidden; }
     background: rgba(255,255,255,.06);
     border:1px solid rgba(255,255,255,.18);
 }
-.connect:hover, .cancel:hover{ transform:translateY(-1px); filter:brightness(1.02) contrast(1.05); }
+.connect:hover, .cancel:hover{
+    transform:translateY(-1px);
+    filter:brightness(1.05) contrast(1.05);
+}
 .connect:active, .cancel:active{ transform:translateY(1px) scale(.995); }
 
 /* Accesibilidad */

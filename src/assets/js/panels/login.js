@@ -1,7 +1,9 @@
 /**
- * @author Luuxis
- * Licencia Luuxis v1.0 (ver archivo LICENSE para detalles en FR/ES)
+ * HyLegacy Launcher — Login Panel
+ * @author SrMast3r
+ * Basado en Luuxis | Adaptado por HyLegacy
  */
+
 const { AZauth, Mojang } = require('minecraft-java-core');
 const { ipcRenderer } = require('electron');
 
@@ -15,14 +17,13 @@ import {
     setStatus
 } from '../utils.js';
 
-/* ===================== Helpers de vista (sin scroll, con animación) ===================== */
+/* ===================== Helpers ===================== */
 const VIEWS = ['.login-home', '.login-offline', '.login-AZauth', '.login-AZauth-A2F'];
 const showView = (sel) => {
     VIEWS.forEach(s => {
         const el = document.querySelector(s);
         if (!el) return;
-        if (s === sel) el.classList.add('is-active');
-        else el.classList.remove('is-active');
+        el.classList.toggle('is-active', s === sel);
     });
 };
 
@@ -33,42 +34,39 @@ class Login {
         this.config = configIn;
         this.db = new database();
 
-        // Determinar flujo según config.online
+        // Determinar modo de inicio
         if (typeof this.config.online === 'boolean') {
             this.config.online ? this.getMicrosoft() : this.getCrack();
         } else if (typeof this.config.online === 'string') {
             if (this.config.online.match(/^(http|https):\/\/[^ "]+$/)) this.getAZauth();
         }
 
-        // Botón cancelar (abre Settings como en tu base)
+        // Botón cancelar
         document.querySelector('.cancel-home')?.addEventListener('click', () => {
             document.querySelector('.cancel-home').style.display = 'none';
             changePanel('settings');
         });
 
-        // Mostrar la vista activa (si alguna se marcó programáticamente)
+        // Refrescar vista activa
         requestAnimationFrame(() => {
             document.querySelectorAll('.login-tabs').forEach(el => {
-                if (getComputedStyle(el).display !== 'none' || el.classList.contains('is-active')) {
+                if (getComputedStyle(el).display !== 'none' || el.classList.contains('is-active'))
                     el.classList.add('is-active');
-                }
             });
         });
     }
 
     /* ===================== Microsoft ===================== */
     async getMicrosoft() {
-        console.log('Inicializando inicio de sesión Microsoft…');
+        console.log('Iniciando sesión Microsoft...');
         const pop = new popup();
-        const loginHome = document.querySelector('.login-home');
-        const microsoftBtn = document.querySelector('.connect-home');
-
         showView('.login-home');
 
+        const microsoftBtn = document.querySelector('.connect-home');
         microsoftBtn.addEventListener('click', () => {
             pop.openPopup({
-                title: 'Conexión',
-                content: 'Por favor, espera…',
+                title: 'Conectando con Microsoft',
+                content: 'Por favor, espera...',
                 color: 'var(--color)'
             });
 
@@ -91,61 +89,34 @@ class Login {
         }, { once: true });
     }
 
-    /* ===================== Offline (Crack) ===================== */
+    /* ===================== Offline ===================== */
     async getCrack() {
-        console.log('Inicializando inicio de sesión offline…');
+        console.log('Iniciando sesión offline...');
         const pop = new popup();
-        const loginOffline = document.querySelector('.login-offline');
+        showView('.login-offline');
+
         const emailOffline = document.querySelector('.email-offline');
         const connectOffline = document.querySelector('.connect-offline');
 
-        showView('.login-offline');
-
         connectOffline.addEventListener('click', async () => {
             const nick = (emailOffline.value || '').trim();
-
-            if (nick.length < 3) {
-                pop.openPopup({
-                    title: 'Error',
-                    content: 'Tu apodo debe tener al menos 3 caracteres.',
-                    options: true
-                });
-                return;
-            }
-
-            if (/\s/.test(nick)) {
-                pop.openPopup({
-                    title: 'Error',
-                    content: 'Tu apodo no debe contener espacios.',
-                    options: true
-                });
-                return;
-            }
+            if (nick.length < 3) return pop.openPopup({ title: 'Error', content: 'El apodo debe tener al menos 3 caracteres.', options: true });
+            if (/\s/.test(nick)) return pop.openPopup({ title: 'Error', content: 'El apodo no puede contener espacios.', options: true });
 
             const MojangConnect = await Mojang.login(nick);
-
-            if (MojangConnect.error) {
-                pop.openPopup({
-                    title: 'Error',
-                    content: MojangConnect.message,
-                    options: true
-                });
-                return;
-            }
+            if (MojangConnect.error)
+                return pop.openPopup({ title: 'Error', content: MojangConnect.message, options: true });
 
             await this.saveData(MojangConnect);
             pop.closePopup();
         }, { once: true });
     }
 
-    /* ===================== AZauth (con 2FA) ===================== */
+    /* ===================== AZauth ===================== */
     async getAZauth() {
-        console.log('Inicializando inicio de sesión AZauth…');
+        console.log('Iniciando sesión AZauth...');
         const AZauthClient = new AZauth(this.config.online);
         const Pop = new popup();
-
-        const loginAZauth = document.querySelector('.login-AZauth');
-        const loginAZauthA2F = document.querySelector('.login-AZauth-A2F');
 
         const AZauthEmail = document.querySelector('.email-AZauth');
         const AZauthPassword = document.querySelector('.password-AZauth');
@@ -159,66 +130,38 @@ class Login {
 
         AZauthConnectBTN.addEventListener('click', async () => {
             Pop.openPopup({
-                title: 'Conectando…',
-                content: 'Por favor, espera…',
+                title: 'Conectando...',
+                content: 'Por favor, espera...',
                 color: 'var(--color)'
             });
 
-            if (!AZauthEmail.value || !AZauthPassword.value) {
-                Pop.openPopup({
-                    title: 'Error',
-                    content: 'Completa todos los campos.',
-                    options: true
-                });
-                return;
-            }
+            if (!AZauthEmail.value || !AZauthPassword.value)
+                return Pop.openPopup({ title: 'Error', content: 'Completa todos los campos.', options: true });
 
             let AZauthConnect = await AZauthClient.login(AZauthEmail.value, AZauthPassword.value);
 
-            if (AZauthConnect.error) {
-                Pop.openPopup({
-                    title: 'Error',
-                    content: AZauthConnect.message,
-                    options: true
-                });
-                return;
-            }
+            if (AZauthConnect.error)
+                return Pop.openPopup({ title: 'Error', content: AZauthConnect.message, options: true });
 
             if (AZauthConnect.A2F) {
-                // Pedir código A2F
                 showView('.login-AZauth-A2F');
                 Pop.closePopup();
 
-                AZauthCancelA2F.addEventListener('click', () => {
-                    showView('.login-AZauth');
-                }, { once: true });
+                AZauthCancelA2F.addEventListener('click', () => showView('.login-AZauth'), { once: true });
 
                 connectAZauthA2F.addEventListener('click', async () => {
                     Pop.openPopup({
-                        title: 'Conectando…',
-                        content: 'Por favor, espera…',
+                        title: 'Conectando...',
+                        content: 'Por favor, espera...',
                         color: 'var(--color)'
                     });
 
-                    if (!AZauthA2F.value) {
-                        Pop.openPopup({
-                            title: 'Error',
-                            content: 'Ingresa el código de seguridad.',
-                            options: true
-                        });
-                        return;
-                    }
+                    if (!AZauthA2F.value)
+                        return Pop.openPopup({ title: 'Error', content: 'Ingresa el código de seguridad.', options: true });
 
                     AZauthConnect = await AZauthClient.login(AZauthEmail.value, AZauthPassword.value, AZauthA2F.value);
-
-                    if (AZauthConnect.error) {
-                        Pop.openPopup({
-                            title: 'Error',
-                            content: AZauthConnect.message,
-                            options: true
-                        });
-                        return;
-                    }
+                    if (AZauthConnect.error)
+                        return Pop.openPopup({ title: 'Error', content: AZauthConnect.message, options: true });
 
                     await this.saveData(AZauthConnect);
                     Pop.closePopup();
@@ -231,21 +174,21 @@ class Login {
         }, { once: true });
     }
 
-    /* ===================== Guardar cuenta y selección de instancia ===================== */
+    /* ===================== Guardar cuenta ===================== */
     async saveData(connectionData) {
         const configClient = await this.db.readData('configClient');
         const account = await this.db.createData('accounts', connectionData);
-        const instanceSelect = configClient.instance_selct; // compat con tu key existente
+        const instanceSelect = configClient.instance_selct;
         const instancesList = await config.getInstanceList();
 
         configClient.account_selected = account.ID;
 
-        // Si la instancia seleccionada requiere whitelist y el jugador no está, elegir otra
+        // Verificar whitelist
         for (const instance of instancesList) {
             if (instance.whitelistActive) {
                 const allowed = Array.isArray(instance.whitelist) && instance.whitelist.includes(account.name);
                 if (!allowed && instance.name === instanceSelect) {
-                    const fallback = instancesList.find(i => i.whitelistActive === false) || instancesList[0];
+                    const fallback = instancesList.find(i => !i.whitelistActive) || instancesList[0];
                     if (fallback) {
                         configClient.instance_selct = fallback.name;
                         await setStatus(fallback.status);
