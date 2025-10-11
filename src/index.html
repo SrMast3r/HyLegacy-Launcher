@@ -2,6 +2,7 @@
 <html lang="es-MX">
 <head>
     <meta charset="UTF-8" />
+    <!-- CSP ajustada -->
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self';
                  script-src 'self';
@@ -13,19 +14,20 @@
     <link rel="stylesheet" href="assets/css/index.css" />
 </head>
 <body class="global">
-<!-- Fondo suave (no causa scroll) -->
-<div class="bg" aria-hidden="true">
+<!-- Fondo decorativo (blobs + grid) -->
+<div class="bg">
     <div class="blob b1"></div>
     <div class="blob b2"></div>
     <div class="grid"></div>
 </div>
 
-<!-- Splash centrado -->
+<!-- Splash a pantalla completa -->
 <main id="splash" class="splash" hidden>
     <section class="card" role="status" aria-live="polite" aria-atomic="true">
         <img class="logo" src="./assets/images/logo.png" alt="Logo HyLegacy" draggable="false" />
 
         <div class="text">
+            <!-- Quote/author ocultos por JS; quedan por si luego los usas -->
             <p id="splashMessage" class="quote" aria-label="frase motivacional"></p>
             <p class="author">@<span id="splashAuthor">HyLegacy</span></p>
 
@@ -38,7 +40,7 @@
             Descargar actualización
         </button>
 
-        <div class="progress-wrap">
+        <div class="progress-wrap" aria-hidden="true">
             <progress id="progressBar" class="progress" value="0" max="0" aria-label="Progreso de descarga"></progress>
             <span id="progressLabel" class="progress-label"></span>
         </div>
@@ -47,6 +49,6 @@
     </section>
 </main>
 
-<script src="assets/js/index.js"></script>
+<script src="assets/js/index.js" type="module"></script>
 </body>
 </html>
