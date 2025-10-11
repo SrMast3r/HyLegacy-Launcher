@@ -2,7 +2,7 @@
 <html lang="es-MX">
 <head>
     <meta charset="UTF-8" />
-    <!-- CSP ajustada para permitir imágenes locales y GitHub API en update -->
+    <!-- CSP ajustada -->
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self';
                  script-src 'self';
@@ -13,16 +13,27 @@
     <title>HyLegacy — Inicio</title>
     <link rel="stylesheet" href="assets/css/index.css" />
 </head>
-<body>
-<!-- Splash a pantalla completa, centrado -->
+<body class="global">
+<!-- Fondo decorativo (blobs + grid) -->
+<div class="bg">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="grid"></div>
+</div>
+
+<!-- Splash a pantalla completa -->
 <main id="splash" class="splash" hidden>
     <section class="card" role="status" aria-live="polite" aria-atomic="true">
-        <img class="logo" src="./assets/images/icon.png" alt="Logo" draggable="false" />
+        <img class="logo" src="./assets/images/icon.png" alt="Logo HyLegacy" draggable="false" />
 
         <div class="text">
-            <p id="splashMessage" class="quote" aria-label="frase motivacional"> </p>
+            <!-- Quote/author ocultos por JS; quedan por si luego los usas -->
+            <p id="splashMessage" class="quote" aria-label="frase motivacional"></p>
             <p class="author">@<span id="splashAuthor">HyLegacy</span></p>
+
+            <h1 class="headline">HyLegacy Launcher</h1>
             <p id="statusMessage" class="status">Buscando actualización…</p>
+            <p class="substatus">Mantén esta ventana abierta. Nosotros nos encargamos del resto.</p>
         </div>
 
         <button id="downloadButton" class="btn" type="button" hidden>
@@ -33,6 +44,8 @@
             <progress id="progressBar" class="progress" value="0" max="0" aria-label="Progreso de descarga"></progress>
             <span id="progressLabel" class="progress-label"></span>
         </div>
+
+        <p class="footnote">© HyLegacy • Hecho con ❤️</p>
     </section>
 </main>
 
