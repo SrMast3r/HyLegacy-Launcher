@@ -2,31 +2,36 @@
 <html lang="es-MX">
 <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self';" />
+    <!-- CSP ajustada para permitir imágenes locales y GitHub API en update -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self';
+                 script-src 'self';
+                 img-src 'self' data:;
+                 style-src 'self' 'unsafe-inline';
+                 connect-src 'self' https://api.github.com;">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>HyLegacy — Inicio</title>
     <link rel="stylesheet" href="assets/css/index.css" />
 </head>
 <body>
-<!-- Contenedor Splash -->
+<!-- Splash a pantalla completa, centrado -->
 <main id="splash" class="splash" hidden>
-    <section class="splash__card" role="status" aria-live="polite" aria-atomic="true">
-        <img class="splash__logo" src="assets/images/icon.png" alt="Logo" draggable="false" />
+    <section class="card" role="status" aria-live="polite" aria-atomic="true">
+        <img class="logo" src="./assets/images/icon.png" alt="Logo" draggable="false" />
 
-        <div class="splash__text">
-            <p class="splash-message" id="splashMessage" aria-label="frase motivacional"></p>
-            <p class="splash-author"><span class="author" id="splashAuthor"></span></p>
-            <p class="message" id="statusMessage">Buscando actualización…</p>
+        <div class="text">
+            <p id="splashMessage" class="quote" aria-label="frase motivacional"> </p>
+            <p class="author">@<span id="splashAuthor">HyLegacy</span></p>
+            <p id="statusMessage" class="status">Buscando actualización…</p>
         </div>
 
-        <!-- Botón de descarga (mac/linux) -->
-        <button class="download-update" id="downloadButton" type="button" hidden>
+        <button id="downloadButton" class="btn" type="button" hidden>
             Descargar actualización
         </button>
 
-        <div class="splash__progress">
-            <progress value="0" max="0" class="progress" id="progressBar" aria-label="Progreso de descarga"></progress>
-            <span class="progress__label" id="progressLabel"></span>
+        <div class="progress-wrap" aria-hidden="true">
+            <progress id="progressBar" class="progress" value="0" max="0" aria-label="Progreso de descarga"></progress>
+            <span id="progressLabel" class="progress-label"></span>
         </div>
     </section>
 </main>
