@@ -10,58 +10,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>HyLegacy — Login</title>
 
-    <!-- Tus temas -->
-    <link rel="stylesheet" href="assets/css/theme.css">
-    <!-- Estilos del login (los que pegaste arriba) -->
-    <link rel="stylesheet" href="assets/css/login.css">
+    <link rel="stylesheet" href="assets/css/theme.css" />
+    <link rel="stylesheet" href="assets/css/login.css" />
 </head>
-<body>
+<body class="global">
+<!-- Fondo decorativo igual al splash -->
+<div class="bg" aria-hidden="true">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="grid"></div>
+</div>
+
 <main class="login">
     <div class="container">
 
-        <!-- HOME (Microsoft) -->
+        <!-- HOME -->
         <section class="login-tabs login-home is-active" aria-label="Inicio de sesión Microsoft">
-            <h1 class="login-text">Inicia sesión</h1>
+            <img src="./assets/images/icon.png" alt="Logo HyLegacy" class="login-logo" draggable="false" />
+            <h1 class="login-text">HyLegacy Launcher</h1>
 
             <div class="input-login">
-                <!-- No requiere inputs; lo maneja el popup/IPC -->
-                <button class="connect connect-home" type="button" aria-label="Conectar con Microsoft">
-                    Conectar con Microsoft
-                </button>
+                <button class="connect connect-home" type="button">Conectar con Microsoft</button>
                 <button class="cancel cancel-home" type="button">Configurar</button>
             </div>
 
             <div class="login-options">
-                <!-- Accesos rápidos a otros modos -->
-                <button class="cancel" type="button" onclick="showView('.login-offline')">Usar Modo Offline</button>
-                <button class="cancel" type="button" onclick="showView('.login-AZauth')">Usar AZauth</button>
+                <button class="cancel" type="button" onclick="showView('.login-offline')">Modo Offline</button>
+                <button class="cancel" type="button" onclick="showView('.login-AZauth')">AZauth</button>
             </div>
         </section>
 
         <!-- OFFLINE -->
-        <section class="login-tabs login-offline" aria-label="Inicio de sesión Offline">
+        <section class="login-tabs login-offline">
+            <img src="./assets/images/icon.png" alt="Logo HyLegacy" class="login-logo" draggable="false" />
             <h1 class="login-text">Modo Offline</h1>
             <div class="input-login">
-                <input class="email email-offline" type="text" placeholder="Apodo (mín. 3 letras)" autocomplete="nickname" />
+                <input class="email email-offline" type="text" placeholder="Apodo (mín. 3 letras)" />
                 <button class="connect connect-offline" type="button">Entrar</button>
                 <button class="cancel" type="button" onclick="showView('.login-home')">Volver</button>
             </div>
         </section>
 
-        <!-- AZAUTH (usuario/contraseña) -->
-        <section class="login-tabs login-AZauth" aria-label="Inicio de sesión AZauth">
+        <!-- AZAUTH -->
+        <section class="login-tabs login-AZauth">
+            <img src="./assets/images/icon.png" alt="Logo HyLegacy" class="login-logo" draggable="false" />
             <h1 class="login-text">AZauth</h1>
             <div class="input-login">
-                <input class="email email-AZauth" type="email" placeholder="Correo" autocomplete="email" />
-                <input class="password password-AZauth" type="password" placeholder="Contraseña" autocomplete="current-password" />
+                <input class="email email-AZauth" type="email" placeholder="Correo" />
+                <input class="password password-AZauth" type="password" placeholder="Contraseña" />
                 <button class="connect connect-AZauth" type="button">Conectar</button>
                 <button class="cancel" type="button" onclick="showView('.login-home')">Volver</button>
             </div>
         </section>
 
-        <!-- AZAUTH (2FA) -->
-        <section class="login-tabs login-AZauth-A2F" aria-label="Código de seguridad AZauth">
-            <h1 class="login-text">Verificación en dos pasos</h1>
+        <!-- AZAUTH 2FA -->
+        <section class="login-tabs login-AZauth-A2F">
+            <img src="./assets/images/icon.png" alt="Logo HyLegacy" class="login-logo" draggable="false" />
+            <h1 class="login-text">Verificación 2FA</h1>
             <div class="input-login">
                 <input class="A2F A2F-AZauth" type="text" placeholder="Código de seguridad" inputmode="numeric" />
                 <button class="connect connect-AZauth-A2F" type="button">Confirmar</button>
@@ -72,20 +77,14 @@
     </div>
 </main>
 
-<!-- Tu módulo JS exporta default Login (ya lo hiciste) -->
 <script type="module">
     import Login from './assets/js/login.js';
-
-    // helper global usado por los botones "Volver / Cambiar vista"
     window.showView = (sel) => {
-        document.querySelectorAll('.login-tabs').forEach(el => {
-            el.classList.toggle('is-active', el.matches(sel));
-        });
+        document.querySelectorAll('.login-tabs').forEach(el =>
+            el.classList.toggle('is-active', el.matches(sel))
+        );
     };
-
-    // Instancia el flujo; puedes pasar config desde tu router/panel
     const login = new Login();
-    // Ejemplo de config mínima: online true => Microsoft; false => Offline; string URL => AZauth
     const config = { online: true, client_id: 'TU_CLIENT_ID_MICROSOFT' };
     login.init(config);
 </script>
