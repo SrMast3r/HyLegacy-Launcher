@@ -1,223 +1,186 @@
 @import "font.css";
 @import "theme.css";
 
-/* =====================
-   Reset & base
-   ===================== */
+/* ===== Reset base ===== */
 *,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100svh; }            /* clave: alto real de la ventana */
+html{ font-size:16px; }
+body{
+    margin:0;
+    background: var(--background);
+    color: var(--color);
+    font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    letter-spacing:0;
+    overflow:hidden;
+    display:grid;                         /* centrado HARD */
+    place-items:center;
+}
 
+/* ===== Tokens ===== */
 :root{
-    /* De theme.css:
-       --background, --color, --element-color */
     --ring: 0 0 0 2px rgba(255,255,255,.08);
     --panel: rgba(255,255,255,.06);
     --panel-strong: rgba(255,255,255,.12);
     --radius: 18px;
 
-    --neon: #2DFF88;
-    --neon-2: #1BCB68;
+    --neon:#2DFF88;
+    --neon-2:#1BCB68;
     --glow: 0 0 16px rgba(45,255,136,.45), 0 0 36px rgba(45,255,136,.2);
 
     --grid-color: rgba(255,255,255,.06);
 }
 
-html, body {
-    height: 100%;
-    background: var(--background);
-    color: var(--color);
-    font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-    letter-spacing: 0;
-    overflow: hidden; /* splash sin scroll */
-}
-
-/* =====================
-   Fondo decorativo (reusa tu HTML .bg .blob .grid)
-   ===================== */
-.bg{ position: fixed; inset: 0; pointer-events: none; }
-
-/* “Aurora” animada usando los blobs existentes */
+/* ===== Fondo decorativo ===== */
+.bg{ position:fixed; inset:0; pointer-events:none; }
 .blob{
-    position: absolute;
-    filter: blur(60px) saturate(140%);
-    mix-blend-mode: screen;
-    opacity: .75;
-    will-change: transform, opacity;
+    position:absolute; filter:blur(60px) saturate(140%); mix-blend-mode:screen; opacity:.75;
 }
 .blob.b1{
-    width: 60vmax; height: 60vmax;
-    left: -10vmax; top: -6vmax;
-    background: radial-gradient(closest-side, rgba(120,160,255,.20), transparent 60%);
-    animation: blobFloat1 18s ease-in-out infinite;
+    width:60vmax; height:60vmax; left:-10vmax; top:-6vmax;
+    background:radial-gradient(closest-side, rgba(120,160,255,.20), transparent 60%);
+    animation:blobFloat1 18s ease-in-out infinite;
 }
 .blob.b2{
-    width: 50vmax; height: 50vmax;
-    right: -8vmax; top: 10vmax;
-    background: radial-gradient(closest-side, rgba(45,255,136,.22), transparent 60%);
-    animation: blobFloat2 20s ease-in-out infinite;
+    width:50vmax; height:50vmax; right:-8vmax; top:10vmax;
+    background:radial-gradient(closest-side, rgba(45,255,136,.22), transparent 60%);
+    animation:blobFloat2 20s ease-in-out infinite;
 }
-@keyframes blobFloat1{ 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-4%) } }
-@keyframes blobFloat2{ 0%,100%{ transform: translateX(0) } 50%{ transform: translateX(-3%) } }
+@keyframes blobFloat1{0%,100%{transform:translateY(0)}50%{transform:translateY(-4%)}}
+@keyframes blobFloat2{0%,100%{transform:translateX(0)}50%{transform:translateX(-3%)}}
 
-/* Grid sutil */
 .grid{
-    position: absolute; inset: 0;
+    position:absolute; inset:0;
     background:
             linear-gradient(var(--grid-color) 1px, transparent 1px),
             linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-    background-size: 28px 28px, 28px 28px;
-    mask: radial-gradient(80% 60% at 50% 30%, rgba(255,255,255,.6), transparent 70%);
-    animation: gridPan 40s linear infinite;
-    opacity: .9;
+    background-size:28px 28px,28px 28px;
+    mask:radial-gradient(80% 60% at 50% 30%, rgba(255,255,255,.6), transparent 70%);
+    animation:gridPan 40s linear infinite;
+    opacity:.9;
 }
-@keyframes gridPan{ from{background-position:0 0,0 0} to{background-position:0 28px,28px 0} }
+@keyframes gridPan{from{background-position:0 0,0 0}to{background-position:0 28px,28px 0}}
 
-/* =====================
-   Splash layout
-   ===================== */
-.splash {
-    min-height: 100%;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-    background:
-            radial-gradient(1200px 800px at 50% -10%, rgba(255,255,255,0.04), transparent 60%),
-            var(--background);
+/* ===== Splash layout ===== */
+.splash{
+    width:100%;
+    height:100%;
+    display:grid;
+    place-content:center;                 /* centra vertical y horizontal */
+    padding:24px;
 }
-
 .card{
-    width: min(560px, 92vw);
-    border-radius: var(--radius);
-    border: 1px solid rgba(255,255,255,.12);
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-    box-shadow: 0 24px 48px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
+    width:min(560px, 92vw);
+    border-radius:var(--radius);
+    border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+    box-shadow:0 24px 48px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
     backdrop-filter: blur(14px) saturate(130%);
     -webkit-backdrop-filter: blur(14px) saturate(130%);
 
-    padding: 28px 22px 22px;
-    display: grid;
-    justify-items: center;
-    gap: 18px;
+    padding:28px 22px 22px;
+    display:grid;
+    justify-items:center;                 /* centra todo dentro */
+    align-content:center;
+    gap:18px;
 
-    position: relative; isolation: isolate;
-    transform: translateY(16px) scale(.985);
-    opacity: 0;
-    transition: transform .5s cubic-bezier(.2,.9,.2,1), opacity .5s ease;
+    position:relative; isolation:isolate;
+    transform:translateY(12px) scale(.985);
+    opacity:0;
+    transition:transform .45s cubic-bezier(.2,.9,.2,1), opacity .45s ease;
+    margin-inline:auto;                   /* por si el contenedor crece */
 }
-.card.show{ transform: none; opacity: 1; }
+.card.show{ transform:none; opacity:1; }
 
-/* Borde neon animado */
+/* borde glow */
 .card::before{
-    content: ""; position: absolute; inset: -1px; border-radius: inherit; z-index: -1;
-    background: linear-gradient(135deg, rgba(45,255,136,.45), rgba(120,160,255,.35), rgba(45,255,136,.45));
-    filter: blur(16px); opacity: .35; animation: borderGlow 6s ease-in-out infinite;
+    content:""; position:absolute; inset:-1px; border-radius:inherit; z-index:-1;
+    background:linear-gradient(135deg, rgba(45,255,136,.45), rgba(120,160,255,.35), rgba(45,255,136,.45));
+    filter:blur(16px); opacity:.35; animation:borderGlow 6s ease-in-out infinite;
 }
-@keyframes borderGlow{ 0%,100%{opacity:.25; transform:translateY(0)} 50%{opacity:.45; transform:translateY(-2px)} }
+@keyframes borderGlow{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.45;transform:translateY(-2px)}}
 
-/* Tilt 3D: el estilo base queda limpio; el transform lo maneja JS */
-.card.tilt{ transform-style: preserve-3d; }
+/* tilt 3D */
+.card.tilt{ transform-style:preserve-3d; }
 
-/* =====================
-   Logo — escala controlada (673x769)
-   ===================== */
+/* ===== Logo (673x769) ===== */
 .logo{
-    width: clamp(96px, 16vw, 140px);
-    height: auto;
-    aspect-ratio: 673/769;
-    user-select: none; -webkit-user-drag: none;
-    filter: drop-shadow(0 10px 28px rgba(0,0,0,.55));
-    animation: float 4.6s ease-in-out infinite, breathe 3.4s ease-in-out infinite;
-    will-change: transform, filter;
+    width:clamp(96px, 16vw, 140px);
+    height:auto;
+    aspect-ratio:673/769;
+    user-select:none; -webkit-user-drag:none;
+    filter:drop-shadow(0 10px 28px rgba(0,0,0,.55));
+    animation:float 4.6s ease-in-out infinite, breathe 3.4s ease-in-out infinite;
 }
-@keyframes float{ 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-7px) } }
-@keyframes breathe{ 0%,100%{ filter: drop-shadow(0 10px 28px rgba(0,0,0,.55)) } 50%{ filter: drop-shadow(0 16px 40px rgba(0,0,0,.65)) } }
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes breathe{0%,100%{filter:drop-shadow(0 10px 28px rgba(0,0,0,.55))}50%{filter:drop-shadow(0 16px 40px rgba(0,0,0,.65))}}
 
-/* =====================
-   Textos
-   ===================== */
-.text{ text-align: center; display: grid; gap: 6px; }
-
+/* ===== Tipografía centrada & reset márgenes ===== */
+.text{ text-align:center; display:grid; gap:6px; }
+h1, h2, h3, p{ margin:0; }             /* elimina empujes verticales */
 .headline{
-    margin: 6px 0 2px;
-    font-weight: 900;
-    font-size: clamp(20px, 4vw, 26px);
-    letter-spacing: .3px;
-    background: linear-gradient(90deg, #fff, #c9ffe2 40%, #cfe1ff 70%, #fff 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    text-shadow: 0 0 12px rgba(45,255,136,.15);
+    font-weight:900; font-size:clamp(20px, 4vw, 26px); letter-spacing:.3px;
+    background:linear-gradient(90deg,#fff,#c9ffe2 40%,#cfe1ff 70%,#fff 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 12px rgba(45,255,136,.15);
+    margin-top:6px;
 }
-.status{ color: rgba(233,240,255,.85); font-size: 14px; }
-.substatus{ color: rgba(233,240,255,.6); font-size: 12px; }
+.status{ color:rgba(233,240,255,.85); font-size:14px; margin-top:6px; }
+.substatus{ color:rgba(233,240,255,.6); font-size:12px; }
 
-/* Quote/author (compat por si los activas después) */
-.quote{ font-size: 13px; opacity: .85; }
-.author{ font-size: 12px; color: rgba(233,240,255,.7); }
+/* opcionales ocultos por JS */
+.quote{ font-size:13px; opacity:.85; }
+.author{ font-size:12px; color:rgba(233,240,255,.7); }
 
-/* =====================
-   Botón (descarga manual)
-   ===================== */
+/* ===== Botón ===== */
 .btn{
-    display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
-    min-height: 44px; padding: 0 18px; border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.22);
-    background: linear-gradient(135deg, var(--neon), var(--neon-2));
-    color: #03140A; font-weight: 1000; letter-spacing: .3px;
-    box-shadow: var(--glow), inset 0 0 0 1px rgba(255,255,255,.22);
-    transition: transform .09s ease, filter .14s ease, box-shadow .14s ease;
-    cursor: pointer; will-change: transform, filter;
+    display:inline-flex; align-items:center; justify-content:center; gap:.6rem;
+    min-height:44px; padding:0 18px; border-radius:14px;
+    border:1px solid rgba(255,255,255,.22);
+    background:linear-gradient(135deg, var(--neon), var(--neon-2));
+    color:#03140A; font-weight:1000; letter-spacing:.3px;
+    box-shadow:var(--glow), inset 0 0 0 1px rgba(255,255,255,.22);
+    transition:transform .09s ease, filter .14s ease, box-shadow .14s ease;
+    cursor:pointer;
 }
-.btn:hover{ filter: brightness(1.05) contrast(1.06); transform: translateY(-1px); }
-.btn:active{ transform: translateY(1px) scale(.995); }
+.btn:hover{ filter:brightness(1.05) contrast(1.06); transform:translateY(-1px); }
+.btn:active{ transform:translateY(1px) scale(.995); }
 
-/* =====================
-   Progreso
-   ===================== */
+/* ===== Progreso ===== */
 .progress-wrap{
-    display: grid; gap: 8px; justify-items: center; width: 100%;
-    opacity: 0; transform: translateY(6px);
-    transition: .25s ease;
+    display:grid; gap:8px; justify-items:center; width:100%;
+    opacity:0; transform:translateY(6px);
+    transition:.25s ease;
 }
-.progress-wrap.show{ opacity: 1; transform: none; }
+.progress-wrap.show{ opacity:1; transform:none; }
 
 .progress{
-    width: min(380px, 86%);
-    height: 12px;
-    appearance: none;
-    border: none;
-    background: transparent;
+    width:min(380px, 86%);
+    height:12px; appearance:none; border:none; background:transparent;
 }
 .progress::-webkit-progress-bar{
-    background-color: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.18);
-    border-radius: 999px;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+    background-color:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:999px;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
 }
 .progress::-webkit-progress-value{
-    border-radius: 999px;
-    background: linear-gradient(135deg, var(--neon), var(--neon-2));
-    box-shadow: var(--glow);
-    /* stripes animadas */
-    mask: linear-gradient(120deg, rgba(0,0,0,.85), rgba(0,0,0,.85)) padding-box,
+    border-radius:999px;
+    background:linear-gradient(135deg, var(--neon), var(--neon-2));
+    box-shadow:var(--glow);
+    animation:stripe 1.2s linear infinite;
+    mask:linear-gradient(120deg, rgba(0,0,0,.85), rgba(0,0,0,.85)) padding-box,
     linear-gradient(45deg, rgba(255,255,255,.35) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.35) 50%, rgba(255,255,255,.35) 75%, transparent 75%, transparent) border-box;
     -webkit-mask-composite: source-over;
-    animation: stripe 1.2s linear infinite;
 }
-@keyframes stripe{ to{ background-position: 40px 0 } }
+@keyframes stripe{ to{ background-position:40px 0 } }
 
-.progress-label{
-    font-size: 12px;
-    color: rgba(233,240,255,.8);
-    min-height: 1em;
-}
+.progress-label{ font-size:12px; color:rgba(233,240,255,.8); min-height:1em; }
 
-/* =====================
-   Pie
-   ===================== */
-.footnote{ margin: 2px 0 0; font-size: 11px; color: rgba(233,240,255,.55); }
+/* ===== Pie ===== */
+.footnote{ font-size:11px; color:rgba(233,240,255,.55); }
 
-/* =====================
-   Accesibilidad: reducir movimiento
-   ===================== */
-@media (prefers-reduced-motion: reduce){
-    .blob,.grid,.card::before,.logo{ animation: none !important; }
-    .card{ transition: none !important; }
+/* ===== Accesibilidad ===== */
+@media (prefers-reduced-motion:reduce){
+    .blob,.grid,.card::before,.logo{ animation:none !important; }
+    .card{ transition:none !important; }
 }
