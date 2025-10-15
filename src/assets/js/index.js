@@ -1,10 +1,8 @@
-// assets/js/index.js
 // HyLegacy Launcher — Splash Controller (Renderer)
-// Autor: HyLegacy (SrMast3r)
-// Nota: Este archivo asume que en tu BrowserWindow tienes nodeIntegration habilitado
-//       y que existen los canales IPC usados aquí (mismo naming que tu proyecto).
+// Estilo futurista + tilt 3D + mejoras visuales.
+// Mantiene tus IDs/clases y tu flujo de updater.
 
-/* =============================== Imports/Globals =============================== */
+// =============================== Imports/Globals ===============================
 const { ipcRenderer, shell } = require('electron');
 const os = require('os');
 
@@ -17,54 +15,70 @@ try {
 // Tus utilidades (como ya las usabas)
 import { config, database } from './utils.js';
 
-/* ================================ Utilidades ================================== */
+// ================================ Helpers ======================================
+const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => root.querySelector(sel);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/** Formatea bytes a cadena breve */
 function prettyBytes(bytes = 0) {
     if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
-    const units = ['B','KB','MB','GB','TB'];
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
     const num = bytes / Math.pow(1024, i);
     return `${num.toFixed(num >= 100 ? 0 : num >= 10 ? 1 : 2)} ${units[i]}`;
 }
 
-/** Escapa HTML en strings */
 function escapeHTML(s = '') {
     return String(s).replace(/[&<>'"]/g, c => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
     }[c]));
 }
 
-/** Forzar no-scroll incluso en WebViews tercos */
+/** Evita scrollbars tercos */
 function killScrollbars() {
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
-    // Extra: quitar scrollbars WebKit
     const style = document.createElement('style');
     style.textContent = `::-webkit-scrollbar{width:0;height:0}`;
     document.head.appendChild(style);
 }
 
-/* ================================ Clase Splash ================================ */
+// ================================ Tilt 3D ======================================
+function attachTilt(cardEl) {
+    if (!cardEl) return;
+    let rect;
+    const maxTilt = 10; // grados
+    const onMove = (e) => {
+        rect = rect || cardEl.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - .5;
+        const y = (e.clientY - rect.top) / rect.height - .5;
+        cardEl.style.transform =
+            `rotateX(${(-y * maxTilt).toFixed(2)}deg) rotateY(${(x * maxTilt).toFixed(2)}deg)`;
+    };
+    const reset = () => { cardEl.style.transform = ''; rect = null; };
+    cardEl.addEventListener('pointermove', onMove);
+    cardEl.addEventListener('pointerleave', reset);
+}
+
+// ================================ Clase Splash ================================
 class Splash {
     constructor() {
-        // --- Cache de elementos UI ---
-        this.$root       = $('#splash');
-        this.$msg        = $('#splashMessage');
-        this.$author     = $('#splashAuthor');
-        this.$status     = $('#statusMessage');
-        this.$substatus  = $('.substatus');     // opcional, si existe en tu HTML
-        this.$progress   = $('#progressBar');
-        this.$progressLb = $('#progressLabel');
-        this.$btn        = $('#downloadButton');
+        // Cache de elementos UI
+        this.$root         = $('#splash');
+        this.$card         = document.querySelector('.card');
+        this.$msg          = $('#splashMessage');
+        this.$author       = $('#splashAuthor');
+        this.$status       = $('#statusMessage');
+        this.$substatus    = $('.substatus'); // opcional
+        this.$progress     = $('#progressBar');
+        this.$progressLb   = $('#progressLabel');
+        this.$btn          = $('#downloadButton');
         this.$progressWrap = $('.progress-wrap');
 
         // Estado
         this._closing = false;
 
-        // Bind keys (DevTools)
+        // DevTools
         document.addEventListener('keydown', (e) => {
             const isDevTools = (e.ctrlKey && e.shiftKey && e.code === 'KeyI') || e.code === 'F12';
             if (isDevTools) ipcRenderer.send('update-window-dev-tools');
@@ -91,16 +105,18 @@ class Splash {
             ipcRenderer.send('update-window-progress-load');
         }
 
-        // Ocultar quote/author para un look profesional (si existen)
+        // Ocultar quote/author si existen
         if (this.$msg)    this.$msg.style.display = 'none';
         if (this.$author) this.$author.closest('p')?.style && (this.$author.closest('p').style.display = 'none');
 
-        // Kill scrollbars a prueba de todo
+        // Kill scrollbars
         killScrollbars();
 
-        // Mostrar splash con fade-in
+        // Mostrar splash + animar card
         this.$root.hidden = false;
-        requestAnimationFrame(() => this.$root.classList.add('show'));
+        this.$card?.classList.add('tilt');
+        requestAnimationFrame(() => this.$card?.classList.add('show'));
+        attachTilt(this.$card);
 
         // Iniciar flujo
         this.setStatus('Comprobando actualizaciones…');
@@ -172,12 +188,11 @@ class Splash {
 
         // Fallback por si no está bien definido en package.json
         if (!owner || !repo) {
-            // 👉 Ajusta estos valores si quieres forzar el repo
             owner = owner || 'HyLegacy';
             repo  = repo  || (pkg?.name?.replace(/\s+/g, '-') || 'HyLegacy-Launcher');
         }
 
-        // Usamos window.fetch (permite CSP connect-src a api.github.com)
+        // Usamos window.fetch (CSP ya permite api.github.com)
         const releases = await fetch(`https://api.github.com/repos/${owner}/${repo}/releases`, {
             headers: { 'Accept': 'application/vnd.github+json' }
         }).then(r => r.ok ? r.json() : Promise.reject(new Error(`GitHub API ${r.status}`)));
@@ -191,7 +206,6 @@ class Splash {
         const osKey = os.platform() === 'darwin' ? 'mac' : 'linux';
         const preferredExt = os.platform() === 'darwin' ? '.dmg' : '.AppImage';
 
-        // Busca en releases hasta hallar un asset que machee
         let foundAsset = null;
         for (const rel of releases) {
             const assets = Array.isArray(rel.assets) ? rel.assets : [];
@@ -281,8 +295,5 @@ class Splash {
     }
 }
 
-/* =============================== Helpers DOM =============================== */
-function $(sel, root = document) { return root.querySelector(sel); }
-
-/* ================================ Bootstrap ================================= */
+// ================================ Bootstrap ====================================
 new Splash();

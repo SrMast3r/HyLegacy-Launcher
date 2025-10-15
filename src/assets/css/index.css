@@ -1,13 +1,13 @@
 @import "font.css";
 @import "theme.css";
 
-/* ====== Reset & base ====== */
-*,
-*::before,
-*::after { box-sizing: border-box; }
+/* =====================
+   Reset & base
+   ===================== */
+*,*::before,*::after{ box-sizing:border-box; }
 
 :root{
-    /* Colores desde theme.css:
+    /* De theme.css:
        --background, --color, --element-color */
     --ring: 0 0 0 2px rgba(255,255,255,.08);
     --panel: rgba(255,255,255,.06);
@@ -16,7 +16,9 @@
 
     --neon: #2DFF88;
     --neon-2: #1BCB68;
-    --glow: 0 0 12px rgba(45,255,136,.35), 0 0 24px rgba(45,255,136,.18);
+    --glow: 0 0 16px rgba(45,255,136,.45), 0 0 36px rgba(45,255,136,.2);
+
+    --grid-color: rgba(255,255,255,.06);
 }
 
 html, body {
@@ -25,9 +27,53 @@ html, body {
     color: var(--color);
     font-family: "Poppins", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     letter-spacing: 0;
+    overflow: hidden; /* splash sin scroll */
 }
 
-/* ====== Splash layout ====== */
+/* =====================
+   Fondo decorativo (reusa tu HTML .bg .blob .grid)
+   ===================== */
+.bg{ position: fixed; inset: 0; pointer-events: none; }
+
+/* “Aurora” animada usando los blobs existentes */
+.blob{
+    position: absolute;
+    filter: blur(60px) saturate(140%);
+    mix-blend-mode: screen;
+    opacity: .75;
+    will-change: transform, opacity;
+}
+.blob.b1{
+    width: 60vmax; height: 60vmax;
+    left: -10vmax; top: -6vmax;
+    background: radial-gradient(closest-side, rgba(120,160,255,.20), transparent 60%);
+    animation: blobFloat1 18s ease-in-out infinite;
+}
+.blob.b2{
+    width: 50vmax; height: 50vmax;
+    right: -8vmax; top: 10vmax;
+    background: radial-gradient(closest-side, rgba(45,255,136,.22), transparent 60%);
+    animation: blobFloat2 20s ease-in-out infinite;
+}
+@keyframes blobFloat1{ 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-4%) } }
+@keyframes blobFloat2{ 0%,100%{ transform: translateX(0) } 50%{ transform: translateX(-3%) } }
+
+/* Grid sutil */
+.grid{
+    position: absolute; inset: 0;
+    background:
+            linear-gradient(var(--grid-color) 1px, transparent 1px),
+            linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+    background-size: 28px 28px, 28px 28px;
+    mask: radial-gradient(80% 60% at 50% 30%, rgba(255,255,255,.6), transparent 70%);
+    animation: gridPan 40s linear infinite;
+    opacity: .9;
+}
+@keyframes gridPan{ from{background-position:0 0,0 0} to{background-position:0 28px,28px 0} }
+
+/* =====================
+   Splash layout
+   ===================== */
 .splash {
     min-height: 100%;
     display: grid;
@@ -38,130 +84,140 @@ html, body {
             var(--background);
 }
 
-.splash__card{
-    width: min(520px, 92vw);
+.card{
+    width: min(560px, 92vw);
     border-radius: var(--radius);
-    border: 1px solid rgba(255,255,255,.08);
-    background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+    border: 1px solid rgba(255,255,255,.12);
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
     box-shadow: 0 24px 48px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
-    padding: 28px 24px;
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+
+    padding: 28px 22px 22px;
     display: grid;
     justify-items: center;
     gap: 18px;
+
+    position: relative; isolation: isolate;
+    transform: translateY(16px) scale(.985);
     opacity: 0;
-    transform: translateY(14px) scale(.995);
-    animation: cardIn .36s cubic-bezier(.21,.98,.24,.99) .12s both;
+    transition: transform .5s cubic-bezier(.2,.9,.2,1), opacity .5s ease;
 }
+.card.show{ transform: none; opacity: 1; }
 
-@keyframes cardIn {
-    to { opacity:1; transform:none; }
+/* Borde neon animado */
+.card::before{
+    content: ""; position: absolute; inset: -1px; border-radius: inherit; z-index: -1;
+    background: linear-gradient(135deg, rgba(45,255,136,.45), rgba(120,160,255,.35), rgba(45,255,136,.45));
+    filter: blur(16px); opacity: .35; animation: borderGlow 6s ease-in-out infinite;
 }
+@keyframes borderGlow{ 0%,100%{opacity:.25; transform:translateY(0)} 50%{opacity:.45; transform:translateY(-2px)} }
 
-.splash__logo{
-    width: 128px; height: 128px;
+/* Tilt 3D: el estilo base queda limpio; el transform lo maneja JS */
+.card.tilt{ transform-style: preserve-3d; }
+
+/* =====================
+   Logo — escala controlada (673x769)
+   ===================== */
+.logo{
+    width: clamp(96px, 16vw, 140px);
+    height: auto;
+    aspect-ratio: 673/769;
     user-select: none; -webkit-user-drag: none;
-    filter: drop-shadow(0 8px 24px rgba(0,0,0,.4));
-    animation: float 3.6s ease-in-out infinite;
+    filter: drop-shadow(0 10px 28px rgba(0,0,0,.55));
+    animation: float 4.6s ease-in-out infinite, breathe 3.4s ease-in-out infinite;
+    will-change: transform, filter;
 }
+@keyframes float{ 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-7px) } }
+@keyframes breathe{ 0%,100%{ filter: drop-shadow(0 10px 28px rgba(0,0,0,.55)) } 50%{ filter: drop-shadow(0 16px 40px rgba(0,0,0,.65)) } }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-}
+/* =====================
+   Textos
+   ===================== */
+.text{ text-align: center; display: grid; gap: 6px; }
 
-.splash__text{
-    text-align: center;
-    display: grid; gap: 6px;
-}
-
-.splash-message{
-    font-weight: 800;
-    font-size: clamp(18px, 3.8vw, 22px);
-    line-height: 1.35;
-    opacity: 0;
-    transform: translateY(6px);
-    animation: fadeUp .42s ease .24s both;
-}
-.splash-author{
-    opacity: 0;
-    animation: fade .4s ease .36s forwards;
-    font-size: 12px;
-    color: rgba(255,255,255,.8);
-}
-.splash-author .author{ font-weight: 800; }
-
-.message{
-    font-weight: 800;
-    font-size: clamp(16px, 3.2vw, 18px);
-    opacity: 0;
-    transform: translateY(6px);
-    animation: fadeUp .42s ease .44s both;
-}
-
-@keyframes fadeUp{ to{ opacity:1; transform:none; } }
-@keyframes fade{ to{ opacity:1; } }
-
-/* ====== Download button (mac/linux) ====== */
-.download-update{
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: .5rem;
-    min-height: 44px;
-    padding: 0 18px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,.18);
-    background: linear-gradient(135deg, var(--neon), var(--neon-2));
-    color: #03140A;
-    font-weight: 1000;
+.headline{
+    margin: 6px 0 2px;
+    font-weight: 900;
+    font-size: clamp(20px, 4vw, 26px);
     letter-spacing: .3px;
-    box-shadow: var(--glow), inset 0 0 0 1px rgba(255,255,255,.22);
-    transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
+    background: linear-gradient(90deg, #fff, #c9ffe2 40%, #cfe1ff 70%, #fff 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 12px rgba(45,255,136,.15);
 }
-.download-update:hover{ filter: brightness(1.02) contrast(1.05); transform: translateY(-1px); }
-.download-update:active{ transform: translateY(1px) scale(.995); }
+.status{ color: rgba(233,240,255,.85); font-size: 14px; }
+.substatus{ color: rgba(233,240,255,.6); font-size: 12px; }
 
-/* ====== Progress ====== */
-.splash__progress{
-    display: grid;
-    gap: 8px;
-    justify-items: center;
-    width: 100%;
+/* Quote/author (compat por si los activas después) */
+.quote{ font-size: 13px; opacity: .85; }
+.author{ font-size: 12px; color: rgba(233,240,255,.7); }
+
+/* =====================
+   Botón (descarga manual)
+   ===================== */
+.btn{
+    display: inline-flex; align-items: center; justify-content: center; gap: .6rem;
+    min-height: 44px; padding: 0 18px; border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.22);
+    background: linear-gradient(135deg, var(--neon), var(--neon-2));
+    color: #03140A; font-weight: 1000; letter-spacing: .3px;
+    box-shadow: var(--glow), inset 0 0 0 1px rgba(255,255,255,.22);
+    transition: transform .09s ease, filter .14s ease, box-shadow .14s ease;
+    cursor: pointer; will-change: transform, filter;
 }
+.btn:hover{ filter: brightness(1.05) contrast(1.06); transform: translateY(-1px); }
+.btn:active{ transform: translateY(1px) scale(.995); }
+
+/* =====================
+   Progreso
+   ===================== */
+.progress-wrap{
+    display: grid; gap: 8px; justify-items: center; width: 100%;
+    opacity: 0; transform: translateY(6px);
+    transition: .25s ease;
+}
+.progress-wrap.show{ opacity: 1; transform: none; }
 
 .progress{
-    width: min(360px, 86%);
+    width: min(380px, 86%);
     height: 12px;
     appearance: none;
-    border-radius: 999px;
+    border: none;
     background: transparent;
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
-    transition: opacity .2s ease;
-    opacity: 0; /* visible cuando hay descarga */
 }
-
-.progress.show{ opacity: 1; }
-
 .progress::-webkit-progress-bar{
     background-color: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.18);
     border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
 }
-
 .progress::-webkit-progress-value{
-    background: linear-gradient(135deg, var(--neon), var(--neon-2));
     border-radius: 999px;
+    background: linear-gradient(135deg, var(--neon), var(--neon-2));
     box-shadow: var(--glow);
+    /* stripes animadas */
+    mask: linear-gradient(120deg, rgba(0,0,0,.85), rgba(0,0,0,.85)) padding-box,
+    linear-gradient(45deg, rgba(255,255,255,.35) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.35) 50%, rgba(255,255,255,.35) 75%, transparent 75%, transparent) border-box;
+    -webkit-mask-composite: source-over;
+    animation: stripe 1.2s linear infinite;
 }
+@keyframes stripe{ to{ background-position: 40px 0 } }
 
-.progress__label{
+.progress-label{
     font-size: 12px;
-    color: rgba(255,255,255,.8);
+    color: rgba(233,240,255,.8);
     min-height: 1em;
 }
 
-/* ====== Accesibilidad: reducir movimiento ====== */
+/* =====================
+   Pie
+   ===================== */
+.footnote{ margin: 2px 0 0; font-size: 11px; color: rgba(233,240,255,.55); }
+
+/* =====================
+   Accesibilidad: reducir movimiento
+   ===================== */
 @media (prefers-reduced-motion: reduce){
-    .splash__logo{ animation: none !important; }
-    .splash__card, .splash-message, .message, .splash-author { animation: none !important; opacity: 1 !important; transform: none !important; }
+    .blob,.grid,.card::before,.logo{ animation: none !important; }
+    .card{ transition: none !important; }
 }
