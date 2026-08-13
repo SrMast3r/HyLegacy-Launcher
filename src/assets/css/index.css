@@ -3,83 +3,90 @@
 
 /* ===== Reset base ===== */
 *,*::before,*::after{ box-sizing:border-box; }
+/* El atributo [hidden] nativo pierde contra reglas de autor con la misma
+   especificidad (ej. ".btn{ display:inline-flex }") — sin esto el botón
+   de descarga manual se veía aunque el HTML lo marcara hidden. */
+[hidden]{ display:none !important; }
 html,body{ height:100svh; }            /* clave: alto real de la ventana */
 html{ font-size:16px; }
 body{
     margin:0;
-    background: var(--background);
-    color: var(--color);
+    color: var(--txt);
     font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     letter-spacing:0;
     overflow:hidden;
     display:grid;                         /* centrado HARD */
     place-items:center;
+    background-color: var(--navy);
+    position:relative;
 }
 
-/* ===== Tokens ===== */
+/* ===== Tokens — mismos que Home/Instancias, para que las dos ventanas
+   se vean como una sola app, no dos diseños distintos ===== */
 :root{
-    --ring: 0 0 0 2px rgba(255,255,255,.08);
-    --panel: rgba(255,255,255,.06);
-    --panel-strong: rgba(255,255,255,.12);
-    --radius: 18px;
+    --navy:        #071410;
+    --navy-2:      #0B2416;
+    --panel:       rgba(10, 24, 17, 0.58);
+    --panel-strong:rgba(6, 15, 11, 0.88);
+    --stroke:      rgba(170, 255, 200, 0.14);
+    --stroke-strong:rgba(170, 255, 200, 0.34);
+    --txt:         #EAFCEF;
+    --muted:       #9FC7AE;
 
-    --neon:#2EDB6E;
-    --neon-2:#12A24A;
-    --glow: 0 0 16px rgba(46,219,110,.45), 0 0 36px rgba(46,219,110,.2);
+    --gold:        #2EDB6E;
+    --gold-2:      #12A24A;
+    --gold-glow:   0 0 14px rgba(46,219,110,.5), 0 0 34px rgba(46,219,110,.22);
 
-    --grid-color: rgba(255,255,255,.06);
+    --teal:        #7CFFA0;
+    --teal-2:      #34C97E;
+
+    --radius: 20px;
 }
 
-/* ===== Fondo decorativo ===== */
-.bg{ position:fixed; inset:0; pointer-events:none; }
-.blob{
-    position:absolute; filter:blur(60px) saturate(140%); mix-blend-mode:screen; opacity:.75;
+/* ===== Fondo real (background_01/02.png, ver setBackground en utils.js) —
+   mismo tratamiento que Home: capa propia detrás de todo, desenfocada,
+   para no repetir el fondo genérico de blobs que no pegaba con el resto. ===== */
+#app-bg{
+    position:fixed;
+    inset:-60px;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    filter:blur(18px);
+    pointer-events:none;
+    z-index:0;
 }
-.blob.b1{
-    width:60vmax; height:60vmax; left:-10vmax; top:-6vmax;
-    background:radial-gradient(closest-side, rgba(124,255,160,.18), transparent 60%);
-    animation:blobFloat1 18s ease-in-out infinite;
-}
-.blob.b2{
-    width:50vmax; height:50vmax; right:-8vmax; top:10vmax;
-    background:radial-gradient(closest-side, rgba(46,219,110,.24), transparent 60%);
-    animation:blobFloat2 20s ease-in-out infinite;
-}
-@keyframes blobFloat1{0%,100%{transform:translateY(0)}50%{transform:translateY(-4%)}}
-@keyframes blobFloat2{0%,100%{transform:translateX(0)}50%{transform:translateX(-3%)}}
-
-.grid{
+#app-bg::after{
+    content:"";
     position:absolute; inset:0;
     background:
-            linear-gradient(var(--grid-color) 1px, transparent 1px),
-            linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-    background-size:28px 28px,28px 28px;
-    mask:radial-gradient(80% 60% at 50% 30%, rgba(255,255,255,.6), transparent 70%);
-    animation:gridPan 40s linear infinite;
-    opacity:.9;
+        linear-gradient(160deg, rgba(124,255,160,.10), transparent 45%),
+        radial-gradient(70% 60% at 50% 30%, rgba(46,219,110,.10), transparent 65%),
+        rgba(4,10,7,.55);
 }
-@keyframes gridPan{from{background-position:0 0,0 0}to{background-position:0 28px,28px 0}}
 
 /* ===== Splash layout ===== */
 .splash{
     width:100%;
     height:100%;
     display:grid;
-    place-content:center;                 /* centra vertical y horizontal */
+    place-content:center;
     padding:24px;
+    position:relative;
+    z-index:1;
 }
 .card{
     width:min(560px, 92vw);
     border-radius:var(--radius);
-    border:1px solid rgba(255,255,255,.12);
-    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-    box-shadow:0 24px 48px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.04);
+    border:1px solid var(--stroke);
+    background:var(--panel-strong);
+    box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.03);
     backdrop-filter: blur(14px) saturate(130%);
     -webkit-backdrop-filter: blur(14px) saturate(130%);
 
     padding:28px 22px 22px;
     display:grid;
-    justify-items:center;                 /* centra todo dentro */
+    justify-items:center;
     align-content:center;
     gap:18px;
 
@@ -87,19 +94,18 @@ body{
     transform:translateY(12px) scale(.985);
     opacity:0;
     transition:transform .45s cubic-bezier(.2,.9,.2,1), opacity .45s ease;
-    margin-inline:auto;                   /* por si el contenedor crece */
+    margin-inline:auto;
 }
 .card.show{ transform:none; opacity:1; }
 
-/* borde glow */
+/* borde glow — mismo verde esmeralda que el resto de la app */
 .card::before{
     content:""; position:absolute; inset:-1px; border-radius:inherit; z-index:-1;
-    background:linear-gradient(135deg, rgba(46,219,110,.45), rgba(124,255,160,.35), rgba(46,219,110,.45));
-    filter:blur(16px); opacity:.35; animation:borderGlow 6s ease-in-out infinite;
+    background:linear-gradient(135deg, rgba(46,219,110,.45), rgba(124,255,160,.3), rgba(46,219,110,.45));
+    filter:blur(16px); opacity:.3; animation:borderGlow 6s ease-in-out infinite;
 }
-@keyframes borderGlow{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.45;transform:translateY(-2px)}}
+@keyframes borderGlow{0%,100%{opacity:.22;transform:translateY(0)}50%{opacity:.4;transform:translateY(-2px)}}
 
-/* tilt 3D */
 .card.tilt{ transform-style:preserve-3d; }
 
 /* ===== Logo (673x769) ===== */
@@ -114,38 +120,21 @@ body{
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 @keyframes breathe{0%,100%{filter:drop-shadow(0 10px 28px rgba(0,0,0,.55))}50%{filter:drop-shadow(0 16px 40px rgba(0,0,0,.65))}}
 
-/* ===== Tipografía centrada & reset márgenes ===== */
+/* ===== Tipografía ===== */
 .text{ text-align:center; display:grid; gap:6px; }
-h1, h2, h3, p{ margin:0; }             /* elimina empujes verticales */
+h1, h2, h3, p{ margin:0; }
 .headline{
     font-weight:900; font-size:clamp(20px, 4vw, 26px); letter-spacing:.3px;
-    background:linear-gradient(90deg,#fff,#b9ffce 40%,#e8fff0 70%,#fff 100%);
+    background: linear-gradient(90deg, #EFFFF4 0%, var(--gold) 55%, #B9FFCE 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
-    text-shadow:0 0 12px rgba(46,219,110,.2);
+    text-shadow: 0 18px 40px rgba(0,0,0,.55);
+    filter: drop-shadow(0 0 18px rgba(46,219,110,.22));
     margin-top:6px;
 }
-.status{ color:rgba(233,240,255,.85); font-size:14px; margin-top:6px; }
-.substatus{ color:rgba(233,240,255,.6); font-size:12px; }
+.status{ color:var(--txt); font-weight:700; font-size:14px; margin-top:6px; }
+.substatus{ color:var(--muted); font-size:12px; }
 
-/* opcionales ocultos por JS */
-.quote{ font-size:13px; opacity:.85; }
-.author{ font-size:12px; color:rgba(233,240,255,.7); }
-
-/* ===== Botón ===== */
-.btn{
-    display:inline-flex; align-items:center; justify-content:center; gap:.6rem;
-    min-height:44px; padding:0 18px; border-radius:14px;
-    border:1px solid rgba(255,255,255,.22);
-    background:linear-gradient(135deg, var(--neon), var(--neon-2));
-    color:#03140A; font-weight:1000; letter-spacing:.3px;
-    box-shadow:var(--glow), inset 0 0 0 1px rgba(255,255,255,.22);
-    transition:transform .09s ease, filter .14s ease, box-shadow .14s ease;
-    cursor:pointer;
-}
-.btn:hover{ filter:brightness(1.05) contrast(1.06); transform:translateY(-1px); }
-.btn:active{ transform:translateY(1px) scale(.995); }
-
-/* ===== Progreso ===== */
+/* ===== Progreso — mismos colores que .progress-bar de Home ===== */
 .progress-wrap{
     display:grid; gap:8px; justify-items:center; width:100%;
     opacity:0; transform:translateY(6px);
@@ -155,32 +144,26 @@ h1, h2, h3, p{ margin:0; }             /* elimina empujes verticales */
 
 .progress{
     width:min(380px, 86%);
-    height:12px; appearance:none; border:none; background:transparent;
+    height:10px; appearance:none; border:none; background:transparent;
 }
 .progress::-webkit-progress-bar{
     background-color:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.18);
+    border:1px solid var(--stroke);
     border-radius:999px;
-    box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
 }
 .progress::-webkit-progress-value{
     border-radius:999px;
-    background:linear-gradient(135deg, var(--neon), var(--neon-2));
-    box-shadow:var(--glow);
-    animation:stripe 1.2s linear infinite;
-    mask:linear-gradient(120deg, rgba(0,0,0,.85), rgba(0,0,0,.85)) padding-box,
-    linear-gradient(45deg, rgba(255,255,255,.35) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.35) 50%, rgba(255,255,255,.35) 75%, transparent 75%, transparent) border-box;
-    -webkit-mask-composite: source-over;
+    background:linear-gradient(135deg, var(--gold), var(--gold-2));
+    box-shadow:var(--gold-glow);
 }
-@keyframes stripe{ to{ background-position:40px 0 } }
 
-.progress-label{ font-size:12px; color:rgba(233,240,255,.8); min-height:1em; }
+.progress-label{ font-size:12px; color:var(--muted); min-height:1em; }
 
 /* ===== Pie ===== */
-.footnote{ font-size:11px; color:rgba(233,240,255,.55); }
+.footnote{ font-size:11px; color:var(--muted); opacity:.8; }
 
 /* ===== Accesibilidad ===== */
 @media (prefers-reduced-motion:reduce){
-    .blob,.grid,.card::before,.logo{ animation:none !important; }
+    .card::before,.logo{ animation:none !important; }
     .card{ transition:none !important; }
 }

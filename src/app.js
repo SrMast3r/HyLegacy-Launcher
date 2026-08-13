@@ -113,10 +113,6 @@ autoUpdater.on('update-available', () => {
     if (updateWindow) updateWindow.webContents.send('updateAvailable');
 });
 
-ipcMain.on('start-update', () => {
-    autoUpdater.downloadUpdate();
-})
-
 autoUpdater.on('update-not-available', () => {
     const updateWindow = UpdateWindow.getWindow();
     if (updateWindow) updateWindow.webContents.send('update-not-available');

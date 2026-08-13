@@ -14,32 +14,19 @@
     <link rel="stylesheet" href="assets/css/index.css" />
 </head>
 <body class="global">
-<!-- Fondo decorativo (blobs + grid) -->
-<div class="bg">
-    <div class="blob b1"></div>
-    <div class="blob b2"></div>
-    <div class="grid"></div>
-</div>
-
 <!-- Splash a pantalla completa -->
 <main id="splash" class="splash" hidden>
     <section class="card" role="status" aria-live="polite" aria-atomic="true">
         <img class="logo" src="./assets/images/logo.png" alt="Logo HyLegacy" draggable="false" />
 
         <div class="text">
-            <!-- Quote/author ocultos por JS; quedan por si luego los usas -->
-            <p id="splashMessage" class="quote" aria-label="frase motivacional"></p>
-            <p class="author">@<span id="splashAuthor">HyLegacy</span></p>
-
             <h1 class="headline">HyLegacy Launcher</h1>
             <p id="statusMessage" class="status">Buscando actualización…</p>
-            <p class="substatus">Mantén esta ventana abierta. Nosotros nos encargamos del resto.</p>
+            <p class="substatus">Todo es automático — no tienes que hacer nada.</p>
         </div>
 
-        <button id="downloadButton" class="btn" type="button" hidden>
-            Descargar actualización
-        </button>
-
+        <!-- Sin botón: la descarga e instalación son 100% automáticas
+             (autoDownload + quitAndInstall silencioso, ver app.js). -->
         <div class="progress-wrap" aria-hidden="true">
             <progress id="progressBar" class="progress" value="0" max="0" aria-label="Progreso de descarga"></progress>
             <span id="progressLabel" class="progress-label"></span>

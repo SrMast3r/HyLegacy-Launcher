@@ -30,6 +30,11 @@ function createWindow() {
         icon: `./src/assets/images/icon.${os.platform() === "win32" ? "ico" : "png"}`,
         frame: false,
         show: false,
+        // Mismo verde oscuro que --navy en el CSS — evita que se vea un
+        // fondo blanco/distinto por una fracción de segundo antes de que
+        // cargue la hoja de estilos, o un borde de otro color en las
+        // esquinas redondeadas de la ventana.
+        backgroundColor: '#071410',
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true

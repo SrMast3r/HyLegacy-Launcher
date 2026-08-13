@@ -1,10 +1,6 @@
-const { ipcRenderer, shell } = require('electron');
-const os = require('os');
+const { ipcRenderer } = require('electron');
 
-let pkg = { name: "HyLegacy-Launcher", repository: {} };
-try { pkg = require('../../package.json'); } catch {}
-
-import { config, database } from './utils.js';
+import { config, setBackground } from './utils.js';
 
 const $ = (sel, root=document) => root.querySelector(sel);
 
@@ -40,12 +36,9 @@ class Splash{
     constructor(){
         this.$root   = $('#splash');
         this.$card   = document.querySelector('.card');
-        this.$msg    = $('#splashMessage');
-        this.$author = $('#splashAuthor');
         this.$status = $('#statusMessage');
         this.$progress   = $('#progressBar');
         this.$progressLb = $('#progressLabel');
-        this.$btn        = $('#downloadButton');
         this.$wrap       = document.querySelector('.progress-wrap');
         this._closing = false;
 
@@ -58,18 +51,13 @@ class Splash{
     }
 
     async onReady(){
-        try{
-            const db=new database();
-            const cfg=await db.readData('configClient');
-            const theme=cfg?.launcher_config?.theme||'auto';
-            const isDark=await ipcRenderer.invoke('is-dark-theme',theme).then(Boolean);
-            document.body.className=isDark?'dark global':'light global';
-        }catch{ document.body.className='dark global'; }
+        // Mismo fondo real (background_01/02.png) + tema que usa el resto
+        // del launcher — antes esta ventana tenía su propio fondo genérico
+        // de blobs encima de un panel translúcido, y se veía como dos
+        // fondos superpuestos en vez de uno solo.
+        try{ await setBackground(); }catch{ document.body.className='dark global'; }
 
-        if(process.platform==='win32') ipcRenderer.send('update-window-progress-load');
-
-        if(this.$msg) this.$msg.style.display='none';
-        if(this.$author) this.$author.closest('p')?.style && (this.$author.closest('p').style.display='none');
+        ipcRenderer.send('update-window-progress-load');
 
         killScrollbars();
 
@@ -90,16 +78,12 @@ class Splash{
         });
 
         ipcRenderer.on('updateAvailable', ()=>{
-            // La descarga ya arrancó sola del lado del proceso principal
-            // (autoDownload:true) — acá solo se muestra el progreso.
+            // Todo automático: la descarga ya arrancó sola del lado del
+            // proceso principal (autoDownload:true) y se instala sola al
+            // terminar (quitAndInstall silencioso) — acá solo se muestra
+            // el progreso, no hay ningún botón que apretar.
             this.setStatus('Descargando actualización…');
-            if(os.platform()==='win32'){
-                this.toggleProgress(true);
-            }else{
-                this.prepareManualDownload().catch(()=>{
-                    this.setStatus('No se pudo preparar la descarga. Inténtalo más tarde.');
-                });
-            }
+            this.toggleProgress(true);
         });
 
         ipcRenderer.on('download-progress', (_evt, p)=>{
@@ -118,45 +102,6 @@ class Splash{
         ipcRenderer.on('error', (_evt, err)=>{
             if(err) this.shutdown(escapeHTML(err.message||'Ocurrió un error inesperado.'));
         });
-    }
-
-    async prepareManualDownload(){
-        this.setStatus('Buscando instalador para tu sistema…');
-
-        const repoFromPkgUrl=(pkg?.repository?.url||'')
-            .replace(/^git\+/,'').replace(/\.git$/,'').replace(/^https:\/\/github\.com\//,'');
-        let owner='', repo='';
-        if(repoFromPkgUrl.includes('/')) [owner,repo]=repoFromPkgUrl.split('/');
-        if(!owner||!repo){ owner=owner||'HyLegacy'; repo=repo||(pkg?.name?.replace(/\s+/g,'-')||'HyLegacy-Launcher'); }
-
-        const releases=await fetch(`https://api.github.com/repos/${owner}/${repo}/releases`,{
-            headers:{'Accept':'application/vnd.github+json'}
-        }).then(r=>r.ok?r.json():Promise.reject(new Error(`GitHub API ${r.status}`)));
-
-        if(!Array.isArray(releases)||releases.length===0){ this.setStatus('No se encontraron releases en GitHub.'); return; }
-
-        const osKey=os.platform()==='darwin'?'mac':'linux';
-        const preferredExt=os.platform()==='darwin'?'.dmg':'.AppImage';
-
-        let foundAsset=null;
-        for(const rel of releases){
-            const assets=Array.isArray(rel.assets)?rel.assets:[];
-            const match=assets
-                .filter(a=>typeof a?.name==='string')
-                .filter(a=>a.name.toLowerCase().includes(osKey))
-                .filter(a=>a.name.toLowerCase().endsWith(preferredExt.toLowerCase()))
-                .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];
-            if(match){ foundAsset=match; break; }
-        }
-        if(!foundAsset){ this.setStatus('Hay una actualización, pero no se encontró un instalador para este sistema.'); return; }
-
-        this.$btn.hidden=false;
-        this.$btn.textContent='Descargar actualización';
-        this.$btn.onclick=()=>{
-            shell.openExternal(foundAsset.browser_download_url);
-            this.shutdown('Abriendo descarga en el navegador…');
-        };
-        this.setStatus('Actualización lista para descargar.');
     }
 
     async maintenanceCheck(){
@@ -183,7 +128,6 @@ class Splash{
             if(i<0){ clearInterval(id); ipcRenderer.send('update-window-close'); }
         },1000);
         this.toggleProgress(false);
-        if(this.$btn) this.$btn.hidden=true;
     }
 
     setStatus(html){ if(this.$status) this.$status.innerHTML=html; }
