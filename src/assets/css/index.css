@@ -4,30 +4,17 @@
 /* ===== Reset base ===== */
 *,*::before,*::after{ box-sizing:border-box; }
 /* El atributo [hidden] nativo pierde contra reglas de autor con la misma
-   especificidad (ej. ".btn{ display:inline-flex }") — sin esto el botón
-   de descarga manual se veía aunque el HTML lo marcara hidden. */
+   especificidad — sin esto un elemento marcado hidden por JS podía
+   terminar visible igual. */
 [hidden]{ display:none !important; }
-html,body{ height:100svh; }            /* clave: alto real de la ventana */
+html,body{ height:100%; }
 html{ font-size:16px; }
-body{
-    margin:0;
-    color: var(--txt);
-    font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    letter-spacing:0;
-    overflow:hidden;
-    display:grid;                         /* centrado HARD */
-    place-items:center;
-    background-color: var(--navy);
-    position:relative;
-}
 
-/* ===== Tokens — mismos que Home/Instancias, para que las dos ventanas
-   se vean como una sola app, no dos diseños distintos ===== */
+/* ===== Tokens — mismos que Home/Instancias ===== */
 :root{
     --navy:        #071410;
     --navy-2:      #0B2416;
-    --panel:       rgba(10, 24, 17, 0.58);
-    --panel-strong:rgba(6, 15, 11, 0.88);
+    --panel-strong:rgba(6, 15, 11, 0.92);
     --stroke:      rgba(170, 255, 200, 0.14);
     --stroke-strong:rgba(170, 255, 200, 0.34);
     --txt:         #EAFCEF;
@@ -38,79 +25,68 @@ body{
     --gold-glow:   0 0 14px rgba(46,219,110,.5), 0 0 34px rgba(46,219,110,.22);
 
     --teal:        #7CFFA0;
-    --teal-2:      #34C97E;
 
     --radius: 20px;
 }
 
-/* ===== Fondo real (background_01/02.png, ver setBackground en utils.js) —
-   mismo tratamiento que Home: capa propia detrás de todo, desenfocada,
-   para no repetir el fondo genérico de blobs que no pegaba con el resto. ===== */
-#app-bg{
-    position:fixed;
-    inset:-60px;
-    background-size:cover;
-    background-position:center;
-    background-repeat:no-repeat;
-    filter:blur(18px);
-    pointer-events:none;
-    z-index:0;
-}
-#app-bg::after{
-    content:"";
-    position:absolute; inset:0;
+/* Ventana chica (400x500) de un solo panel — un fondo sólido, sin capa de
+   arte con blur encima (esa combinación es la que dejaba un borde con
+   "sangrado" visible: el blur está pensado para la ventana grande de Home,
+   no para esta). Todo el fondo vive acá mismo, en un solo lugar. */
+body{
+    margin:0;
+    color: var(--txt);
+    font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    letter-spacing:0;
+    overflow:hidden;
     background:
-        linear-gradient(160deg, rgba(124,255,160,.10), transparent 45%),
-        radial-gradient(70% 60% at 50% 30%, rgba(46,219,110,.10), transparent 65%),
-        rgba(4,10,7,.55);
+        radial-gradient(120% 90% at 50% 0%, rgba(46,219,110,.12), transparent 55%),
+        linear-gradient(180deg, var(--navy-2) 0%, var(--navy) 100%);
 }
 
-/* ===== Splash layout ===== */
+/* ===== Splash layout — un solo nivel de centrado ===== */
 .splash{
     width:100%;
-    height:100%;
-    display:grid;
-    place-content:center;
-    padding:24px;
-    position:relative;
-    z-index:1;
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px;
 }
 .card{
-    width:min(560px, 92vw);
-    border-radius:var(--radius);
+    width:100%;
+    height:100%;
+    max-width:100%;
+    border-radius:var(--radius, 20px);
     border:1px solid var(--stroke);
     background:var(--panel-strong);
-    box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.03);
-    backdrop-filter: blur(14px) saturate(130%);
-    -webkit-backdrop-filter: blur(14px) saturate(130%);
+    box-shadow:0 20px 50px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.03);
 
-    padding:28px 22px 22px;
-    display:grid;
-    justify-items:center;
-    align-content:center;
+    padding:32px 24px 22px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
     gap:18px;
 
-    position:relative; isolation:isolate;
-    transform:translateY(12px) scale(.985);
+    position:relative;
+    transform:translateY(10px) scale(.99);
     opacity:0;
-    transition:transform .45s cubic-bezier(.2,.9,.2,1), opacity .45s ease;
-    margin-inline:auto;
+    transition:transform .4s cubic-bezier(.2,.9,.2,1), opacity .4s ease;
 }
 .card.show{ transform:none; opacity:1; }
 
 /* borde glow — mismo verde esmeralda que el resto de la app */
 .card::before{
     content:""; position:absolute; inset:-1px; border-radius:inherit; z-index:-1;
-    background:linear-gradient(135deg, rgba(46,219,110,.45), rgba(124,255,160,.3), rgba(46,219,110,.45));
-    filter:blur(16px); opacity:.3; animation:borderGlow 6s ease-in-out infinite;
+    background:linear-gradient(135deg, rgba(46,219,110,.4), rgba(124,255,160,.25), rgba(46,219,110,.4));
+    filter:blur(14px); opacity:.28; animation:borderGlow 6s ease-in-out infinite;
 }
-@keyframes borderGlow{0%,100%{opacity:.22;transform:translateY(0)}50%{opacity:.4;transform:translateY(-2px)}}
-
-.card.tilt{ transform-style:preserve-3d; }
+@keyframes borderGlow{0%,100%{opacity:.2}50%{opacity:.36}}
 
 /* ===== Logo (673x769) ===== */
 .logo{
-    width:clamp(96px, 16vw, 140px);
+    width:clamp(88px, 24vw, 120px);
     height:auto;
     aspect-ratio:673/769;
     user-select:none; -webkit-user-drag:none;
@@ -121,20 +97,18 @@ body{
 @keyframes breathe{0%,100%{filter:drop-shadow(0 10px 28px rgba(0,0,0,.55))}50%{filter:drop-shadow(0 16px 40px rgba(0,0,0,.65))}}
 
 /* ===== Tipografía ===== */
-.text{ text-align:center; display:grid; gap:6px; }
+.text{ text-align:center; display:grid; gap:8px; }
 h1, h2, h3, p{ margin:0; }
 .headline{
-    font-weight:900; font-size:clamp(20px, 4vw, 26px); letter-spacing:.3px;
+    font-weight:900; font-size:clamp(20px, 6vw, 25px); letter-spacing:.3px;
     background: linear-gradient(90deg, #EFFFF4 0%, var(--gold) 55%, #B9FFCE 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
-    text-shadow: 0 18px 40px rgba(0,0,0,.55);
-    filter: drop-shadow(0 0 18px rgba(46,219,110,.22));
-    margin-top:6px;
+    filter: drop-shadow(0 0 16px rgba(46,219,110,.25));
 }
-.status{ color:var(--txt); font-weight:700; font-size:14px; margin-top:6px; }
-.substatus{ color:var(--muted); font-size:12px; }
+.status{ color:var(--txt); font-weight:700; font-size:14px; }
+.substatus{ color:var(--muted); font-size:12px; line-height:1.5; padding:0 8px; }
 
-/* ===== Progreso — mismos colores que .progress-bar de Home ===== */
+/* ===== Progreso ===== */
 .progress-wrap{
     display:grid; gap:8px; justify-items:center; width:100%;
     opacity:0; transform:translateY(6px);
@@ -143,27 +117,34 @@ h1, h2, h3, p{ margin:0; }
 .progress-wrap.show{ opacity:1; transform:none; }
 
 .progress{
-    width:min(380px, 86%);
-    height:10px; appearance:none; border:none; background:transparent;
+    width:min(320px, 92%);
+    height:12px; appearance:none; border:none; background:transparent;
 }
 .progress::-webkit-progress-bar{
-    background-color:rgba(255,255,255,.06);
+    background-color:rgba(255,255,255,.05);
     border:1px solid var(--stroke);
     border-radius:999px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,.4);
 }
 .progress::-webkit-progress-value{
     border-radius:999px;
-    background:linear-gradient(135deg, var(--gold), var(--gold-2));
+    background:linear-gradient(90deg, var(--gold-2), var(--gold), var(--teal));
+    background-size:200% 100%;
     box-shadow:var(--gold-glow);
+    animation:progressShimmer 2.2s linear infinite;
+}
+@keyframes progressShimmer{
+    0%{ background-position:200% 0; }
+    100%{ background-position:0 0; }
 }
 
-.progress-label{ font-size:12px; color:var(--muted); min-height:1em; }
+.progress-label{ font-size:12px; font-weight:700; color:var(--gold); min-height:1em; }
 
 /* ===== Pie ===== */
-.footnote{ font-size:11px; color:var(--muted); opacity:.8; }
+.footnote{ font-size:11px; color:var(--muted); opacity:.75; margin-top:auto; }
 
 /* ===== Accesibilidad ===== */
 @media (prefers-reduced-motion:reduce){
-    .card::before,.logo{ animation:none !important; }
+    .card::before,.logo,.progress::-webkit-progress-value{ animation:none !important; }
     .card{ transition:none !important; }
 }

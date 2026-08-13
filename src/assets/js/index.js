@@ -1,6 +1,6 @@
 const { ipcRenderer } = require('electron');
 
-import { config, setBackground } from './utils.js';
+import { config } from './utils.js';
 
 const $ = (sel, root=document) => root.querySelector(sel);
 
@@ -16,20 +16,6 @@ function killScrollbars(){
     document.documentElement.style.overflow='hidden';
     document.body.style.overflow='hidden';
     const st=document.createElement('style'); st.textContent=`::-webkit-scrollbar{width:0;height:0}`; document.head.appendChild(st);
-}
-
-function attachTilt(card){
-    if(!card) return;
-    let rect; const maxTilt=10;
-    const onMove=e=>{
-        rect=rect||card.getBoundingClientRect();
-        const x=(e.clientX-rect.left)/rect.width-.5;
-        const y=(e.clientY-rect.top)/rect.height-.5;
-        card.style.transform=`rotateX(${(-y*maxTilt).toFixed(2)}deg) rotateY(${(x*maxTilt).toFixed(2)}deg)`;
-    };
-    const reset=()=>{ card.style.transform=''; rect=null; };
-    card.addEventListener('pointermove', onMove);
-    card.addEventListener('pointerleave', reset);
 }
 
 class Splash{
@@ -52,21 +38,13 @@ class Splash{
 
     async onReady(){
         // Mismo fondo real (background_01/02.png) + tema que usa el resto
-        // del launcher — antes esta ventana tenía su propio fondo genérico
-        // de blobs encima de un panel translúcido, y se veía como dos
-        // fondos superpuestos en vez de uno solo.
-        try{ await setBackground(); }catch{ document.body.className='dark global'; }
-
         ipcRenderer.send('update-window-progress-load');
 
         killScrollbars();
 
         // Mostrar splash y centrar (hidden -> false)
         this.$root.hidden=false;
-        // añade clases para animación y tilt
-        this.$card?.classList.add('tilt');
         requestAnimationFrame(()=>this.$card?.classList.add('show'));
-        attachTilt(this.$card);
 
         this.setStatus('Comprobando actualizaciones…');
         this.checkUpdate();
