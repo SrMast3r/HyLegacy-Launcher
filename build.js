@@ -80,6 +80,10 @@ class Index {
                 },
                 compression: 'normal',
                 asar: true,
+                // El jar de packwiz lo tiene que abrir un proceso externo (java.exe),
+                // que no puede leer dentro de app.asar (es un archivo virtual, solo
+                // el fs parcheado de Electron lo entiende) — se deja sin empaquetar.
+                asarUnpack: ["app/assets/java/**/*"],
                 electronDownload: {
                     cache: "./node_modules/.cache/electron"
                 },

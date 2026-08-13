@@ -14,7 +14,14 @@ const { fileURLToPath } = require('url');
 // como módulo ES (import), así que se deriva de import.meta.url en vez de
 // depender del global de CommonJS.
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
-const BOOTSTRAP_JAR = path.join(currentDir, '../../java/packwiz-installer-bootstrap.jar');
+let BOOTSTRAP_JAR = path.join(currentDir, '../../java/packwiz-installer-bootstrap.jar');
+
+// java.exe (proceso externo) no puede abrir archivos dentro de app.asar — ahí
+// vive el jar en el cliente instalado, así que se redirige a la copia real que
+// electron-builder deja sin empaquetar (asarUnpack, ver build.js).
+if (BOOTSTRAP_JAR.includes(`app.asar${path.sep}`)) {
+    BOOTSTRAP_JAR = BOOTSTRAP_JAR.replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
+}
 
 function findJavaInDir(dir) {
     if (!dir || !fs.existsSync(dir)) return null;

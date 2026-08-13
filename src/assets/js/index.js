@@ -7,7 +7,6 @@ try { pkg = require('../../package.json'); } catch {}
 import { config, database } from './utils.js';
 
 const $ = (sel, root=document) => root.querySelector(sel);
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 function prettyBytes(bytes=0){
     if(!Number.isFinite(bytes)||bytes<=0) return '0 B';
@@ -82,7 +81,6 @@ class Splash{
         attachTilt(this.$card);
 
         this.setStatus('Comprobando actualizaciones…');
-        await sleep(160);
         this.checkUpdate();
     }
 
@@ -92,10 +90,11 @@ class Splash{
         });
 
         ipcRenderer.on('updateAvailable', ()=>{
-            this.setStatus('Actualización disponible.');
+            // La descarga ya arrancó sola del lado del proceso principal
+            // (autoDownload:true) — acá solo se muestra el progreso.
+            this.setStatus('Descargando actualización…');
             if(os.platform()==='win32'){
                 this.toggleProgress(true);
-                ipcRenderer.send('start-update');
             }else{
                 this.prepareManualDownload().catch(()=>{
                     this.setStatus('No se pudo preparar la descarga. Inténtalo más tarde.');

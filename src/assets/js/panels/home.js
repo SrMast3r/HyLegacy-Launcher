@@ -133,19 +133,7 @@ class Home {
                 btn.setAttribute('title', '');
             });
 
-            await this.populatePlayerInfo();
             await this.prepareDataAndUI();
-
-            if (this.config?.discord_client_id) {
-                await ipcRenderer.invoke('discord-rpc-init', this.config.discord_client_id);
-                const cfgForRPC = await this.db.readData('configClient');
-                const selectedInstance = this.instances?.find(i => i.name === getInstanceSelectedKey(cfgForRPC));
-                await ipcRenderer.invoke('discord-rpc-set-activity', {
-                    details: 'En el menú principal',
-                    state: selectedInstance?.name,
-                    resetTimer: true
-                });
-            }
         } catch (err) {
             console.error('[Home] init error:', err);
         }
@@ -164,36 +152,46 @@ class Home {
         try { el.getAnimations({ subtree: true }).forEach(a => a.cancel()); } catch (_) {}
     }
 
-    async populatePlayerInfo() {
-        const cfg = await this.db.readData('configClient');
-        const acc = await this.db.readData('accounts', cfg?.account_selected);
-        const nick = acc?.name || acc?.username || acc?.profile?.name || 'Jugador';
-        if (this.$.playerNick) this.$.playerNick.textContent = nick;
-    }
-
     async prepareDataAndUI() {
         if (!config || typeof config.getInstanceList !== 'function') {
             console.error('[Home] config.getInstanceList no disponible');
             return;
         }
 
+        // La lista de instancias (red) arranca en paralelo con la lectura
+        // local de cuenta/config — no hay motivo para esperar una antes que
+        // la otra, y la red suele ser lo más lento de los dos.
+        const instancesPromise = config.getInstanceList();
         const cfg = await this.db.readData('configClient');
         const acc = await this.db.readData('accounts', cfg?.account_selected);
         this.playerName = acc?.name || acc?.username || acc?.profile?.name;
+        if (this.$.playerNick) this.$.playerNick.textContent = this.playerName || 'Jugador';
 
-        this.instances = await config.getInstanceList();
+        this.instances = await instancesPromise;
 
         const chosen = this.pickValidInstance(this.instances, getInstanceSelectedKey(cfg), this.playerName);
         if (chosen) {
-            await setStatus(chosen.status);
+            // Pintar la instancia (nombre/imagen) YA — el ping en vivo al server
+            // (jugadores conectados) y el guardado en DB no deben bloquear esto.
             this.renderHero(chosen);
-            await this.db.updateData('configClient', setInstanceSelectedKey(cfg, chosen.name));
+            setStatus(chosen.status).catch(() => {});
+            this.db.updateData('configClient', setInstanceSelectedKey(cfg, chosen.name)).catch(() => {});
         } else {
             this.renderHero({ name: 'Sin acceso', images: { hero: 'assets/images/instance-default.jpg' } });
             this.$.playBtn?.setAttribute('disabled', 'true');
         }
 
         this.renderInstancesGrid(this.instances, chosen?.name);
+
+        if (this.config?.discord_client_id) {
+            ipcRenderer.invoke('discord-rpc-init', this.config.discord_client_id)
+                .then(() => ipcRenderer.invoke('discord-rpc-set-activity', {
+                    details: 'En el menú principal',
+                    state: chosen?.name,
+                    resetTimer: true
+                }))
+                .catch(() => {});
+        }
     }
 
     async refreshHeroFromSelection() {

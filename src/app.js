@@ -181,7 +181,9 @@ if (GH_UPDATE_TOKEN && GH_UPDATE_TOKEN !== 'GH_UPDATE_TOKEN_PLACEHOLDER') {
     autoUpdater.requestHeaders = { Authorization: `token ${GH_UPDATE_TOKEN}` };
 }
 
-autoUpdater.autoDownload = false;
+// Descarga e instala solo — sin pasos manuales ni botones de "descargar".
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
 
 ipcMain.handle('update-app', async () => {
     return await new Promise(async (resolve, reject) => {
