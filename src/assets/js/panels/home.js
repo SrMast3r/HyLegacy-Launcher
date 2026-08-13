@@ -5,6 +5,7 @@
 import config from '../utils/config.js';
 import { database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js';
 import { installPackwiz } from '../utils/packwiz.js';
+import { installEphemeralMods } from '../utils/ephemeralMods.js';
 
 const { Launch } = require('minecraft-java-core');
 const { ipcRenderer } = require('electron');
@@ -500,11 +501,13 @@ class Home {
         bar.max = 0;
         text.textContent = 'Preparando…';
 
+        const instancePath = `${opt.path}/instances/${opt.instance}`;
+        let ephemeralCleanup = null;
+
         // === packwiz: instalar/actualizar mods desde Modrinth/CurseForge (CDN),
         //     no desde nuestro servidor, antes de que minecraft-java-core arranque ===
         if (options.packwiz_url) {
             text.textContent = 'Actualizando mods…';
-            const instancePath = `${opt.path}/instances/${opt.instance}`;
             try {
                 await installPackwiz({
                     packwizUrl: options.packwiz_url,
@@ -525,6 +528,36 @@ class Home {
                 box.style.display = 'none';
                 new popup().openPopup({
                     title: 'Error al actualizar mods',
+                    content: err?.message || String(err),
+                    color: 'red',
+                    options: true
+                });
+                return;
+            }
+            text.textContent = 'Preparando…';
+        }
+
+        // === Mods protegidos: se descifran a mods/ solo por la ventana de
+        //     arranque (ver ephemeralMods.js) — nunca quedan permanentemente
+        //     descargables en el servidor ni en la carpeta de la instancia ===
+        if (options.ephemeral_mods?.length) {
+            text.textContent = 'Preparando contenido protegido…';
+            try {
+                const apiBase = pkg.user ? `${pkg.url}/${pkg.user}` : pkg.url;
+                const { cleanup } = await installEphemeralMods({
+                    instance: options.name,
+                    instancePath,
+                    apiBase
+                });
+                ephemeralCleanup = cleanup;
+            } catch (err) {
+                console.error('[Home] ephemeral mods error', err);
+                writeLaunchLog(logBase, `ERROR ephemeral mods: ${err?.message || err}`);
+                btn.disabled = false;
+                btn.style.display = 'inline-flex';
+                box.style.display = 'none';
+                new popup().openPopup({
+                    title: 'Error al preparar contenido protegido',
                     content: err?.message || String(err),
                     color: 'red',
                     options: true
@@ -572,6 +605,7 @@ class Home {
         });
 
         let hideTimer = null;
+        let ephemeralCleanupTimer = null;
 
         launch.on('data', () => {
             bar.style.display = 'none';
@@ -584,6 +618,15 @@ class Home {
                     hideTimer = null;
                     ipcRenderer.send('main-window-hide');
                 }, 8000);
+            }
+            if (ephemeralCleanup) {
+                // Da tiempo a que Fabric ya haya leído el mod protegido de disco
+                // antes de borrarlo — el proceso ya está arrancando en este punto.
+                ephemeralCleanupTimer = setTimeout(() => {
+                    ephemeralCleanupTimer = null;
+                    ephemeralCleanup?.();
+                    ephemeralCleanup = null;
+                }, 5000);
             }
             new logger('Minecraft', '#36b030');
             ipcRenderer.send('main-window-progress-load');
@@ -601,6 +644,14 @@ class Home {
             if (hideTimer) {
                 clearTimeout(hideTimer);
                 hideTimer = null;
+            }
+            if (ephemeralCleanupTimer) {
+                clearTimeout(ephemeralCleanupTimer);
+                ephemeralCleanupTimer = null;
+            }
+            if (ephemeralCleanup) {
+                ephemeralCleanup();
+                ephemeralCleanup = null;
             }
             ipcRenderer.send('main-window-progress-reset');
             box.style.display = 'none';
