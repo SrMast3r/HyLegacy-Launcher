@@ -84,7 +84,22 @@ async function installEphemeralMods({ instance, instancePath, apiBase }) {
         for (const f of body.files) {
             const plaintext = decryptFile(f);
             const dest = path.join(modsDir, f.filename);
-            fs.writeFileSync(dest, plaintext);
+            // Escritura atómica: se escribe a un nombre temporal y se renombra
+            // al final recién cuando el archivo está 100% completo y cerrado.
+            // Sin esto, Fabric/Mixin podían llegar a abrir el .jar mientras
+            // todavía se estaba escribiendo (o mientras Windows Defender lo
+            // escaneaba al detectar el nombre final ya creado) y leerlo
+            // incompleto — eso es lo que producía "resource invalid or could
+            // not be read" al cargar lockout-client.mixins.json.
+            const tmpDest = `${dest}.tmp-${crypto.randomBytes(4).toString('hex')}`;
+            const fd = fs.openSync(tmpDest, 'w');
+            try {
+                fs.writeSync(fd, plaintext);
+                fs.fsyncSync(fd);
+            } finally {
+                fs.closeSync(fd);
+            }
+            fs.renameSync(tmpDest, dest);
             writtenPaths.push(dest);
         }
     } catch (err) {
