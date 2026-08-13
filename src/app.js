@@ -123,7 +123,14 @@ autoUpdater.on('update-not-available', () => {
 });
 
 autoUpdater.on('update-downloaded', () => {
-    autoUpdater.quitAndInstall();
+    // Sin argumentos, quitAndInstall() a veces cierra la app pero nunca
+    // llega a correr el instalador ni a reabrir sola (confirmado en vivo:
+    // la descarga terminaba bien, pero se quedaba un .exe a medio promover
+    // en %LOCALAPPDATA%\hyl-client-updater\pending\ para siempre). isSilent
+    // fuerza el instalador NSIS con /S sin ventana, isForceRunAfter fuerza
+    // que vuelva a abrir sola aunque electron-updater no esté seguro de que
+    // ya estaba corriendo antes.
+    autoUpdater.quitAndInstall(true, true);
 });
 
 autoUpdater.on('download-progress', (progress) => {
