@@ -17,12 +17,16 @@ if (!file_exists('instances')) {
 if ($instance_param == 'null') {
     $instances_list = scanFolder("instances");
     $instance = array();
+    // Detrás de Cloudflare, nginx solo ve HTTP (Cloudflare termina el TLS);
+    // sin esto, las URLs devueltas al cliente forzarían http:// incluso
+    // cuando el jugador está en https://.
+    $scheme = requestScheme();
     foreach ($instances_list as $value) {
         if (substr($_SERVER['REQUEST_URI'], -1) == '/') {
             $_SERVER['REQUEST_URI'] = substr($_SERVER['REQUEST_URI'], 0, -1);
         }
 
-        $url = "http://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]?instance=$value";
+        $url = "$scheme://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]?instance=$value";
         $instance[$value] = array("name" => $value, "url" => $url);
     }
     

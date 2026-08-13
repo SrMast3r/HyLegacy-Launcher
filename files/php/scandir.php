@@ -1,4 +1,13 @@
 <?php
+// Detrás de Cloudflare (u otro proxy que termine TLS), nginx solo ve HTTP —
+// hay que confiar en X-Forwarded-Proto para saber el esquema real que usó
+// el cliente, si no todas las URLs que arma el servidor quedan en http://.
+function requestScheme() {
+    if (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') return 'https';
+    if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') return 'https';
+    return 'http';
+}
+
 // Archivos propios de packwiz: minecraft-java-core no debe verlos ni intentar
 // descargarlos por su cuenta — packwiz-installer-bootstrap los maneja aparte,
 // directo desde el pack.toml (ver packwiz_url en instances.php).
@@ -46,7 +55,8 @@ function dirToArray($dir) {
         $path = str_replace("$dir/", "", $dir . "/" . $value);
             
         $url_req = parse_url($_SERVER["REQUEST_URI"], PHP_URL_PATH);
-        $url = "http://$_SERVER[HTTP_HOST]$url_req$dir/$path";
+        $scheme = requestScheme();
+        $url = "$scheme://$_SERVER[HTTP_HOST]$url_req$dir/$path";
         $res[] = array("url" => $url, "size" => $size, "hash" => $hash, "path" => $path);     
     }
     return str_replace("\\", "", json_encode($res)); 
