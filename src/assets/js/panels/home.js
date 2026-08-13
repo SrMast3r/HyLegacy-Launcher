@@ -3,7 +3,7 @@
  * @license Luuxis License v1.0
  */
 import config from '../utils/config.js';
-import { database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js';
+import { database, logger, changePanel, appdata, setStatus, pkg, popup, getServerPlayerCount, getSkinHeadUrl } from '../utils.js';
 import { installPackwiz } from '../utils/packwiz.js';
 import { fetchEphemeralMods, writeEphemeralModsSync, deleteEphemeralMods } from '../utils/ephemeralMods.js';
 
@@ -201,7 +201,9 @@ class Home {
                 .then(() => ipcRenderer.invoke('discord-rpc-set-activity', {
                     details: 'En el menú principal',
                     state: chosen?.name,
-                    resetTimer: true
+                    resetTimer: true,
+                    smallImageKey: getSkinHeadUrl(this.playerName),
+                    smallImageText: this.playerName
                 }))
                 .catch(() => {});
         }
@@ -260,7 +262,9 @@ class Home {
         if (this.config?.discord_client_id) {
             ipcRenderer.invoke('discord-rpc-set-activity', {
                 details: 'En el menú principal',
-                state: inst?.name ? `Instancia: ${inst.name}` : undefined
+                state: inst?.name ? `Instancia: ${inst.name}` : undefined,
+                smallImageKey: getSkinHeadUrl(this.playerName),
+                smallImageText: this.playerName
             }).catch(() => {});
         }
     }
@@ -604,7 +608,7 @@ class Home {
         let ephemeralCleanupTimer = null;
         let ephemeralWrittenPaths = null;
 
-        launch.on('data', (msg) => {
+        launch.on('data', async (msg) => {
             // Este es el ÚNICO 'data' que minecraft-java-core emite ANTES de
             // hacer spawn() de la JVM (ver Launch.js: emit('data', 'Launching
             // with arguments...') y en la línea siguiente, sin ningún await de
@@ -652,10 +656,16 @@ class Home {
             ipcRenderer.send('main-window-progress-load');
 
             if (this.config?.discord_client_id) {
+                const players = await getServerPlayerCount(options.status).catch(() => null);
+                const state = players
+                    ? `${players.count}${players.max ? `/${players.max}` : ''} jugadores en línea`
+                    : `MC ${L.mc}${L.type !== 'none' ? ` · ${L.type}` : ''}`;
                 ipcRenderer.invoke('discord-rpc-set-activity', {
                     details: `Jugando ${options.name}`,
-                    state: `MC ${L.mc}${L.type !== 'none' ? ` · ${L.type}` : ''}`,
-                    resetTimer: true
+                    state,
+                    resetTimer: true,
+                    smallImageKey: getSkinHeadUrl(this.playerName),
+                    smallImageText: this.playerName
                 }).catch(() => {});
             }
         });
@@ -686,7 +696,9 @@ class Home {
                 ipcRenderer.invoke('discord-rpc-set-activity', {
                     details: 'En el menú principal',
                     state: options.name ? `Instancia: ${options.name}` : undefined,
-                    resetTimer: true
+                    resetTimer: true,
+                    smallImageKey: getSkinHeadUrl(this.playerName),
+                    smallImageText: this.playerName
                 }).catch(() => {});
             }
         };

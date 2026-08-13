@@ -139,14 +139,37 @@ async function setStatus(opt) {
     const { ip, port, nameServer } = opt;
     if (nameEl) nameEl.textContent = nameServer || 'Servidor';
 
+    const players = await getServerPlayerCount(opt);
+    const count = players?.count ?? 0;
+    if (playersEl) playersEl.textContent = `${count} ${count === 1 ? 'jugador' : 'jugadores'}`;
+}
+
+/**
+ * Ping directo al servidor de Minecraft — igual que setStatus() pero sin
+ * tocar el DOM, para reusar el conteo en otros lados (Discord Rich Presence).
+ * @param {{ip:string, port:number}} opt
+ * @returns {Promise<{count:number, max:number}|null>}
+ */
+async function getServerPlayerCount(opt) {
+    if (!opt?.ip) return null;
     try {
-        const status = new Status(ip, port);
+        const status = new Status(opt.ip, opt.port);
         const res = await status.getStatus().then(r => r).catch(() => null);
-        const count = (res && !res.error) ? (res.playersConnect ?? 0) : 0;
-        if (playersEl) playersEl.textContent = `${count} ${count === 1 ? 'jugador' : 'jugadores'}`;
+        if (!res || res.error) return null;
+        return { count: res.playersConnect ?? 0, max: res.playersMax ?? 0 };
     } catch {
-        if (playersEl) playersEl.textContent = '0 jugadores';
+        return null;
     }
+}
+
+/**
+ * URL pública de la cabeza de la skin del jugador (Minotar) — para la
+ * insignia circular de Discord Rich Presence, que necesita una URL externa
+ * de verdad, no un data: URI como el que se usa para el avatar del footer.
+ */
+function getSkinHeadUrl(playerName) {
+    if (!playerName) return null;
+    return `https://minotar.net/avatar/${encodeURIComponent(playerName)}/128.png`;
 }
 
 /* =================== Exports =================== */
@@ -163,5 +186,7 @@ export {
     accountSelect,
     slider as Slider,
     pkg,
-    setStatus
+    setStatus,
+    getServerPlayerCount,
+    getSkinHeadUrl
 };

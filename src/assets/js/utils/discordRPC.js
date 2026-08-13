@@ -35,7 +35,7 @@ async function init(clientId) {
     }
 }
 
-async function setActivity({ details, state, resetTimer } = {}) {
+async function setActivity({ details, state, resetTimer, smallImageKey, smallImageText } = {}) {
     if (!client || !ready) return;
     if (resetTimer || !startTimestamp) startTimestamp = Date.now();
 
@@ -46,6 +46,10 @@ async function setActivity({ details, state, resetTimer } = {}) {
             startTimestamp,
             largeImageKey: 'hylegacy-4k',
             largeImageText: 'HyLegacy Launcher',
+            // Insignia circular con la skin del jugador (URL externa — Discord
+            // no acepta data: URIs acá, tiene que poder ir a buscarla él mismo).
+            smallImageKey: smallImageKey || undefined,
+            smallImageText: smallImageText || undefined,
             instance: false,
         });
     } catch (err) {
