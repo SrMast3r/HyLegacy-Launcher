@@ -506,7 +506,7 @@ class Home {
         text.textContent = 'Preparando…';
 
         const instancePath = `${opt.path}/instances/${opt.instance}`;
-        let ephemeralPendingFiles = null;
+        let ephemeralWrittenPaths = null;
 
         // === packwiz: instalar/actualizar mods desde Modrinth/CurseForge (CDN),
         //     no desde nuestro servidor, antes de que minecraft-java-core arranque ===
@@ -541,16 +541,20 @@ class Home {
             text.textContent = 'Preparando…';
         }
 
-        // === Mods protegidos: se piden y descifran en MEMORIA acá (con tiempo
-        //     de sobra), pero el .jar recién se escribe a disco en el instante
-        //     sincrónico exacto antes del spawn de la JVM (ver el listener de
-        //     'data' más abajo) — así el archivo en texto plano existe en
-        //     mods/ por el mínimo tiempo posible, no durante toda la descarga.
+        // === Mods protegidos: se piden, descifran y escriben acá (antes de
+        //     que arranque la JVM). Se probó escribir justo en el instante
+        //     sincrónico previo al spawn (mínima exposición en disco), pero
+        //     eso no le daba tiempo a Windows Defender de terminar de
+        //     escanear el archivo recién creado antes de que Fabric/Mixin
+        //     intentara abrirlo — producía "resource ... was invalid or
+        //     could not be read" de forma intermitente en máquinas reales.
+        //     Prioridad: que el juego cargue siempre, no la ventana mínima.
         if (options.ephemeral_mods?.length) {
             text.textContent = 'Preparando contenido protegido…';
             try {
                 const apiBase = pkg.user ? `${pkg.url}/${pkg.user}` : pkg.url;
-                ephemeralPendingFiles = await fetchEphemeralMods({ instance: options.name, apiBase });
+                const files = await fetchEphemeralMods({ instance: options.name, apiBase });
+                ephemeralWrittenPaths = writeEphemeralModsSync(instancePath, files);
             } catch (err) {
                 console.error('[Home] ephemeral mods error', err);
                 writeLaunchLog(logBase, `ERROR ephemeral mods: ${err?.message || err}`);
@@ -606,26 +610,8 @@ class Home {
 
         let hideTimer = null;
         let ephemeralCleanupTimer = null;
-        let ephemeralWrittenPaths = null;
 
         launch.on('data', async (msg) => {
-            // Este es el ÚNICO 'data' que minecraft-java-core emite ANTES de
-            // hacer spawn() de la JVM (ver Launch.js: emit('data', 'Launching
-            // with arguments...') y en la línea siguiente, sin ningún await de
-            // por medio, spawn()). Como los listeners corren sincrónicamente,
-            // escribir el mod protegido AQUÍ — no antes — hace que exista en
-            // disco por una fracción de segundo en vez de durante toda la
-            // descarga/verificación previa del juego.
-            if (ephemeralPendingFiles && typeof msg === 'string' && msg.startsWith('Launching with arguments')) {
-                try {
-                    ephemeralWrittenPaths = writeEphemeralModsSync(instancePath, ephemeralPendingFiles);
-                } catch (err) {
-                    console.error('[Home] ephemeral mods write error', err);
-                    writeLaunchLog(logBase, `ERROR escribiendo mods protegidos: ${err?.message || err}`);
-                }
-                ephemeralPendingFiles = null;
-            }
-
             bar.style.display = 'none';
             text.innerHTML = `Iniciando juego...`;
             writeLaunchLog(logBase, 'Proceso del juego arrancado, esperando confirmación antes de ocultar el launcher.');
