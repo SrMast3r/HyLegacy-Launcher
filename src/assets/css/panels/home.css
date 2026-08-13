@@ -284,14 +284,15 @@ body.global{ overflow:hidden; }
     box-shadow: 0 24px 60px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.03);
 }
 
-/* viñeta cinemática: solo abajo, para no lavar el arte */
+/* viñeta cinemática: degradado negro abajo (garantiza legibilidad del nombre
+   sin depender de que la imagen de la instancia ya venga oscura ahí) */
 .instance-hero::before{
     content:"";
     position:absolute;
     inset:0;
     z-index:1;
     background:
-        linear-gradient(0deg, rgba(4,10,7,.92) 0%, rgba(4,10,7,.55) 26%, transparent 55%),
+        linear-gradient(0deg, rgba(1,4,3,.98) 0%, rgba(1,4,3,.88) 18%, rgba(1,4,3,.5) 40%, transparent 70%),
         linear-gradient(180deg, rgba(4,10,7,.55) 0%, transparent 22%);
     pointer-events:none;
 }
@@ -497,8 +498,9 @@ body.global{ overflow:hidden; }
 .player-head{
     width:3.6rem;
     height:3.6rem;
-    border-radius:50%;
+    border-radius:12px;
     background:url('../../images/default/setve.png') center/cover no-repeat;
+    image-rendering:pixelated;
     border:2px solid var(--gold);
     box-shadow: 0 0 0 3px rgba(46,219,110,.16), 0 6px 18px rgba(0,0,0,.4);
 }
@@ -531,29 +533,25 @@ body.global{ overflow:hidden; }
 .play-btn{
     position:relative;
     appearance:none;
-    border:none;
+    border:1px solid var(--stroke-strong);
     cursor:pointer;
     height:3.4rem;
-    padding:0 2.4rem;
+    padding:0 2.6rem;
     border-radius:999px;
     font-weight:1000;
-    letter-spacing:.6px;
+    letter-spacing:1px;
     font-size:1.15rem;
     text-transform:uppercase;
-    color:#04170B;
-    background: linear-gradient(135deg, var(--gold), var(--gold-2));
-    box-shadow: var(--gold-glow), inset 0 0 0 1px rgba(255,255,255,.28);
-    transition: transform .09s ease, box-shadow .14s ease, filter .14s ease;
+    color:var(--gold);
+    background: linear-gradient(135deg, #03110A, #071F13);
+    box-shadow: var(--gold-glow), inset 0 0 0 1px rgba(255,255,255,.05);
+    transition: transform .09s ease, box-shadow .14s ease, filter .14s ease, color .14s ease;
     overflow:hidden;
 }
-.play-btn::before{
-    content:"⚓";
-    margin-right:.55rem;
-    font-size:1.05rem;
-}
 .play-btn:hover{
-    filter: brightness(1.05) contrast(1.05);
-    box-shadow: 0 0 0 2px rgba(46,219,110,.4), var(--gold-glow);
+    filter: brightness(1.15);
+    color:var(--teal);
+    box-shadow: 0 0 0 2px rgba(46,219,110,.45), var(--gold-glow);
     transform: translateY(-2px);
 }
 .play-btn:active{ transform: translateY(1px) scale(.995); }
