@@ -6,10 +6,6 @@ hash = "4ba63364cb1e50db83c7f29144d2c74cee7159d2c3795ac6df267a927ed93198"
 metafile = true
 
 [[files]]
-file = "mods/lockout-client-1.0.0.jar"
-hash = "afb7fc0a62acf465d2268259eeb42b02a41ac71a78e40dea1c55802cf6289ff8"
-
-[[files]]
 file = "mods/sodium.pw.toml"
 hash = "b0d722aa3b463fddb3a425affdc9e6c898a657040321e8c6501b089d8f7caee2"
 metafile = true
