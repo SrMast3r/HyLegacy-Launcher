@@ -1,7 +1,7 @@
 {
   "name": "hyl-client",
   "preductname": "HyLegacy Client",
-  "version": "3.0.24",
+  "version": "3.0.25",
   "description": "",
   "main": "src/app.js",
   "author": {
@@ -9,7 +9,7 @@
     "email": "account@hylegacy.com",
     "url": "https://www.hylegacy.com/"
   },
-  "url": "http://localhost:8080/",
+  "url": "https://launcher.hylegacy.com/",
   "scripts": {
     "start": "cross-env-shell NODE_ENV=dev electron .",
     "dev": "cross-env-shell DEV_TOOL=open nodemon --exec npm start",
