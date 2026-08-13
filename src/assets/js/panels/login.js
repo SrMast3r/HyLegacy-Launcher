@@ -101,14 +101,7 @@ export default class Login {
 
         const btn = $$('.connect-home');
         on(btn, 'click', () => {
-            pop.openPopup({
-                title: 'Conectando con Microsoft',
-                content: 'Se abrió tu navegador para iniciar sesión. Completa el inicio de sesión ahí — esta ventana se cerrará sola al terminar.',
-                color: 'var(--color)',
-                options: true
-            });
-            // Cancelar desde la app si el usuario no quiere seguir en el navegador
-            on($$('.popup-button'), 'click', () => ipcRenderer.send('Microsoft-window-cancel'), { once: true });
+            pop.openPopup({ title: 'Conectando con Microsoft', content: 'Por favor, espera…', color: 'var(--color)' });
 
             ipcRenderer.invoke('Microsoft-window', this.config.client_id)
                 .then(async account_connect => {

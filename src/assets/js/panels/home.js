@@ -8,6 +8,18 @@ import { installPackwiz } from '../utils/packwiz.js';
 
 const { Launch } = require('minecraft-java-core');
 const { ipcRenderer } = require('electron');
+const fs = require('fs');
+const path = require('path');
+
+/* Log persistente del lanzamiento — la consola de DevTools se pierde si la
+   ventana termina oculta, así que esto queda en disco para poder revisarlo. */
+function writeLaunchLog(basePath, line) {
+    try {
+        fs.mkdirSync(basePath, { recursive: true });
+        const stamp = new Date().toISOString();
+        fs.appendFileSync(path.join(basePath, 'launch.log'), `[${stamp}] ${line}\n`);
+    } catch (_) { /* si ni el log se puede escribir, no hay mucho más que hacer */ }
+}
 
 /* Compat: loader vs loadder */
 const readLoader = (inst) => {
@@ -471,6 +483,9 @@ class Home {
             }
         };
 
+        const logBase = opt.path;
+        writeLaunchLog(logBase, `=== Lanzando instancia "${options.name}" (MC ${L.mc}${L.type !== 'none' ? `, ${L.type} ${L.version}` : ''}) ===`);
+
         // === Mostrar estado de descarga en el footer ===
         const btn = this.$.playBtn;
         const box = this.$.infoBox;
@@ -504,6 +519,7 @@ class Home {
                 });
             } catch (err) {
                 console.error('[Home] packwiz error', err);
+                writeLaunchLog(logBase, `ERROR packwiz: ${err?.message || err}`);
                 btn.disabled = false;
                 btn.style.display = 'inline-flex';
                 box.style.display = 'none';
@@ -555,10 +571,20 @@ class Home {
             text.innerHTML = `Aplicando patch...`;
         });
 
+        let hideTimer = null;
+
         launch.on('data', () => {
             bar.style.display = 'none';
             text.innerHTML = `Iniciando juego...`;
-            if (cfg?.launcher_config?.closeLauncher === 'close-launcher') ipcRenderer.send('main-window-hide');
+            writeLaunchLog(logBase, 'Proceso del juego arrancado, esperando confirmación antes de ocultar el launcher.');
+            if (cfg?.launcher_config?.closeLauncher === 'close-launcher') {
+                // Si el juego revienta al instante (crash silencioso), 'close'/'error' cancelan
+                // este timer antes de que dispare — así el launcher no se queda oculto sin avisar.
+                hideTimer = setTimeout(() => {
+                    hideTimer = null;
+                    ipcRenderer.send('main-window-hide');
+                }, 8000);
+            }
             new logger('Minecraft', '#36b030');
             ipcRenderer.send('main-window-progress-load');
 
@@ -572,6 +598,10 @@ class Home {
         });
 
         const restoreUI = () => {
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+                hideTimer = null;
+            }
             ipcRenderer.send('main-window-progress-reset');
             box.style.display = 'none';
             btn.style.display = 'inline-flex';
@@ -590,12 +620,16 @@ class Home {
             }
         };
 
-        launch.on('close', restoreUI);
+        launch.on('close', () => {
+            writeLaunchLog(logBase, 'Juego cerrado.');
+            restoreUI();
+        });
 
         launch.on('error', err => {
             const msg = err?.error || err?.stack || err?.message || String(err);
-            new popup().openPopup({ title: 'Error', content: msg, color: 'red', options: true });
+            writeLaunchLog(logBase, `ERROR: ${msg}`);
             if (cfg?.launcher_config?.closeLauncher === 'close-launcher') ipcRenderer.send('main-window-show');
+            new popup().openPopup({ title: 'Error', content: msg, color: 'red', options: true });
             restoreUI();
             console.error(err);
         });
