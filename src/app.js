@@ -95,16 +95,17 @@ autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
 ipcMain.handle('update-app', async () => {
-    return await new Promise(async (resolve, reject) => {
-        autoUpdater.checkForUpdates().then(res => {
-            resolve(res);
-        }).catch(error => {
-            reject({
-                error: true,
-                message: error
-            })
-        })
-    })
+    // No devolver el resultado de checkForUpdates() tal cual: trae un
+    // cancellationToken que Electron no puede clonar entre procesos y
+    // hace fallar el invoke con "An object could not be cloned". El
+    // renderer solo necesita saber si falló (catch) o no, nada del
+    // contenido — así que se descarta el valor resuelto.
+    try {
+        await autoUpdater.checkForUpdates();
+        return true;
+    } catch (error) {
+        throw new Error(error?.message || String(error));
+    }
 })
 
 autoUpdater.on('update-available', () => {
