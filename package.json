@@ -22,6 +22,7 @@
     "ignore": "**/test"
   },
   "dependencies": {
+    "@xhayper/discord-rpc": "^1.3.4",
     "electron-updater": "^6.1.8",
     "minecraft-java-core": "^4.1.7",
     "node-bdd": "^2.0.4",

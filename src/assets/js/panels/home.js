@@ -135,6 +135,17 @@ class Home {
 
             await this.populatePlayerInfo();
             await this.prepareDataAndUI();
+
+            if (this.config?.discord_client_id) {
+                await ipcRenderer.invoke('discord-rpc-init', this.config.discord_client_id);
+                const cfgForRPC = await this.db.readData('configClient');
+                const selectedInstance = this.instances?.find(i => i.name === getInstanceSelectedKey(cfgForRPC));
+                await ipcRenderer.invoke('discord-rpc-set-activity', {
+                    details: 'En el menú principal',
+                    state: selectedInstance?.name,
+                    resetTimer: true
+                });
+            }
         } catch (err) {
             console.error('[Home] init error:', err);
         }
@@ -234,6 +245,13 @@ class Home {
         const loaderText = (L.type === 'none' ? 'Vanilla' : L.type) + (L.version ? ` ${L.version}` : '');
         if (this.$.chipLoader) this.$.chipLoader.textContent = loaderText;
         if (this.$.chipVersion) this.$.chipVersion.textContent = `MC ${L.mc}`;
+
+        if (this.config?.discord_client_id) {
+            ipcRenderer.invoke('discord-rpc-set-activity', {
+                details: 'En el menú principal',
+                state: inst?.name ? `Instancia: ${inst.name}` : undefined
+            }).catch(() => {});
+        }
     }
 
     pickValidInstance(instances, desiredName, playerName) {
@@ -545,6 +563,14 @@ class Home {
             if (cfg?.launcher_config?.closeLauncher === 'close-launcher') ipcRenderer.send('main-window-hide');
             new logger('Minecraft', '#36b030');
             ipcRenderer.send('main-window-progress-load');
+
+            if (this.config?.discord_client_id) {
+                ipcRenderer.invoke('discord-rpc-set-activity', {
+                    details: `Jugando ${options.name}`,
+                    state: `MC ${L.mc}${L.type !== 'none' ? ` · ${L.type}` : ''}`,
+                    resetTimer: true
+                }).catch(() => {});
+            }
         });
 
         const restoreUI = () => {
@@ -556,6 +582,14 @@ class Home {
             bar.style.display = '';
             bar.value = 0;
             bar.max = 0;
+
+            if (this.config?.discord_client_id) {
+                ipcRenderer.invoke('discord-rpc-set-activity', {
+                    details: 'En el menú principal',
+                    state: options.name ? `Instancia: ${options.name}` : undefined,
+                    resetTimer: true
+                }).catch(() => {});
+            }
         };
 
         launch.on('close', restoreUI);

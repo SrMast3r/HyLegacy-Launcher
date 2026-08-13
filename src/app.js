@@ -12,6 +12,7 @@ const fs = require('fs');
 
 const UpdateWindow = require("./assets/js/windows/updateWindow.js");
 const MainWindow = require("./assets/js/windows/mainWindow.js");
+const discordRPC = require("./assets/js/utils/discordRPC.js");
 
 let dev = process.env.NODE_ENV === 'dev';
 
@@ -161,7 +162,15 @@ ipcMain.handle('is-dark-theme', (_, theme) => {
     return nativeTheme.shouldUseDarkColors;
 })
 
-app.on('window-all-closed', () => app.quit());
+/* =================== Discord Rich Presence =================== */
+ipcMain.handle('discord-rpc-init', (_, clientId) => discordRPC.init(clientId));
+ipcMain.handle('discord-rpc-set-activity', (_, activity) => discordRPC.setActivity(activity));
+ipcMain.handle('discord-rpc-clear-activity', () => discordRPC.clearActivity());
+
+app.on('window-all-closed', () => {
+    discordRPC.destroy();
+    app.quit();
+});
 
 // Token de solo lectura para poder revisar los releases del repo privado de
 // GitHub. Se sustituye en build time (ver build.js/Obfuscate) desde el secret

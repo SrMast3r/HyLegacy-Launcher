@@ -8,8 +8,13 @@
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { fileURLToPath } = require('url');
 
-const BOOTSTRAP_JAR = path.join(__dirname, '../../java/packwiz-installer-bootstrap.jar');
+// __dirname no está confiablemente enlazado a este archivo cuando se carga
+// como módulo ES (import), así que se deriva de import.meta.url en vez de
+// depender del global de CommonJS.
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const BOOTSTRAP_JAR = path.join(currentDir, '../../java/packwiz-installer-bootstrap.jar');
 
 function findJavaInDir(dir) {
     if (!dir || !fs.existsSync(dir)) return null;
