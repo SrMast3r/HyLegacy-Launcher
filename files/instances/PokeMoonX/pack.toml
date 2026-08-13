@@ -1,0 +1,13 @@
+name = "PokeMoonX"
+author = "HyLegacy"
+version = "1.0.0"
+pack-format = "packwiz:1.1.0"
+
+[index]
+file = "index.toml"
+hash-format = "sha256"
+hash = "c1d2a82552de2b6f9f5ac511cdd139ee45ec2273f01f75c669e958598d3743db"
+
+[versions]
+forge = "36.2.35"
+minecraft = "1.16.5"

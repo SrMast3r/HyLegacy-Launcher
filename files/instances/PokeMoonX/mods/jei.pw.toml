@@ -1,0 +1,13 @@
+name = "Just Enough Items (JEI)"
+filename = "jei-1.16.5-7.8.1.1019.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/u6dRKJwZ/versions/cdOvD10v/jei-1.16.5-7.8.1.1019.jar"
+hash-format = "sha512"
+hash = "034328820cdf86724a5efbdb7889f4b82a51a7df06c8351266069e6fa80783330a4c36d0e974ecb0b2f6f68dcffef8f9198854a67445e02878f90addd0411b4b"
+
+[update]
+[update.modrinth]
+mod-id = "u6dRKJwZ"
+version = "cdOvD10v"

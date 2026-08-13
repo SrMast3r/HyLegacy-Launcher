@@ -1,0 +1,10 @@
+hash-format = "sha256"
+
+[[files]]
+file = "README.md"
+hash = "95af71f668894bef085afdf05cdd32aca34ba5026b7c677cf87751a4edbdd938"
+
+[[files]]
+file = "mods/jei.pw.toml"
+hash = "c189f6e6d2ba404945c53ff1a69b6b7597b72e8bdcc8b04eb378c2477cc479cc"
+metafile = true
