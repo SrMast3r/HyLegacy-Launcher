@@ -1,11 +1,16 @@
 /**
- * Mods efímeros — se piden cifrados al servidor justo antes de lanzar,
- * se descifran en memoria y se escriben en mods/ solo por la ventana de
- * arranque del juego; se borran apenas la JVM ya los cargó. Evita que el
- * .jar quede permanentemente descargable en el listado público del
- * servidor. Ver docs/dev/ephemeral-mods-plan.md (arquitectura completa) —
- * esta es la variante V1 (archivo temporal cifrado, no la de agente Java
- * en memoria, descartada por fragilidad con mods que usan Mixins).
+ * Mods efímeros — se piden cifrados al servidor y se descifran en memoria
+ * con tiempo de sobra (mientras el juego todavía se está descargando/
+ * verificando), pero el .jar en texto plano solo se escribe a disco en el
+ * instante sincrónico exacto en que minecraft-java-core arma el spawn de
+ * la JVM (ver Launch.js: emite 'data' con "Launching with arguments" y en
+ * la siguiente línea, sin ningún await de por medio, hace spawn()). Como
+ * los listeners de EventEmitter corren sincrónicamente, escribir el archivo
+ * dentro de ese listener garantiza que exista en disco por el mínimo tiempo
+ * posible antes de que la JVM lo abra — nada de esperar minutos de descarga
+ * con el mod ya expuesto. Se borra apenas Fabric ya tuvo tiempo de leerlo.
+ * Ver docs/dev/ephemeral-mods-plan.md — sigue siendo la variante V1 (archivo
+ * temporal, no el classloader en memoria, descartado por los Mixins).
  */
 
 const crypto = require('crypto');
@@ -37,34 +42,17 @@ function decryptFile(f) {
 }
 
 /**
- * Reintenta borrar archivos que puedan seguir bloqueados por la JVM
- * (frecuente en Windows si Fabric/Knot mantiene el jar abierto para
- * carga perezosa de recursos). Si tras los reintentos sigue bloqueado,
- * queda como red de seguridad el borrado-antes-de-escribir del próximo
- * lanzamiento — no es un borrado instantáneo garantizado.
- */
-function deleteWithRetry(filePaths, attemptsLeft = 5, delayMs = 1500) {
-    const remaining = [];
-    for (const p of filePaths) {
-        try {
-            if (fs.existsSync(p)) fs.unlinkSync(p);
-        } catch (_) {
-            remaining.push(p);
-        }
-    }
-    if (remaining.length && attemptsLeft > 0) {
-        setTimeout(() => deleteWithRetry(remaining, attemptsLeft - 1, delayMs), delayMs);
-    }
-}
-
-/**
+ * Pide y descifra los mods protegidos de una instancia — todo en memoria,
+ * nada toca disco todavía. Se llama con anticipación (mientras el juego
+ * arranca/descarga), para que el único trabajo que quede pendiente para el
+ * instante de escritura sea el propio fs sincrónico, sin red ni cripto.
+ *
  * @param {object} opts
- * @param {string} opts.instance      nombre de la instancia
- * @param {string} opts.instancePath  carpeta de la instancia (mods/ va ahí dentro)
- * @param {string} opts.apiBase       base del servidor, p.ej. http://localhost:8080
- * @returns {Promise<{ cleanup: () => void }>}
+ * @param {string} opts.instance  nombre de la instancia
+ * @param {string} opts.apiBase   base del servidor, p.ej. http://localhost:8080
+ * @returns {Promise<Array<{ filename: string, plaintext: Buffer }>>}
  */
-async function installEphemeralMods({ instance, instancePath, apiBase }) {
+async function fetchEphemeralMods({ instance, apiBase }) {
     const clientKey = resolveClientKey();
     if (!clientKey) throw new Error('Mods protegidos no disponibles en este build (falta EPHEMERAL_CLIENT_KEY)');
 
@@ -76,38 +64,61 @@ async function installEphemeralMods({ instance, instancePath, apiBase }) {
     }
     if (!body.files?.length) throw new Error('El servidor no devolvió mods protegidos para esta instancia');
 
+    return body.files.map(f => ({ filename: f.filename, plaintext: decryptFile(f) }));
+}
+
+/**
+ * Escribe los mods ya descifrados a mods/ — SINCRÓNICO a propósito, para
+ * poder llamarse desde dentro de un listener de 'data' de minecraft-java-core
+ * justo antes de que haga spawn() de la JVM (ver cabecera del archivo).
+ * Escritura atómica (temp + rename): nada puede ver el archivo a medio
+ * escribir, ni Fabric ni un escaneo de Windows Defender que lo agarre
+ * apenas aparece con el nombre final.
+ *
+ * @param {string} instancePath
+ * @param {Array<{ filename: string, plaintext: Buffer }>} decryptedFiles
+ * @returns {string[]} rutas escritas
+ */
+function writeEphemeralModsSync(instancePath, decryptedFiles) {
     const modsDir = path.join(instancePath, 'mods');
     fs.mkdirSync(modsDir, { recursive: true });
 
     const writtenPaths = [];
-    try {
-        for (const f of body.files) {
-            const plaintext = decryptFile(f);
-            const dest = path.join(modsDir, f.filename);
-            // Escritura atómica: se escribe a un nombre temporal y se renombra
-            // al final recién cuando el archivo está 100% completo y cerrado.
-            // Sin esto, Fabric/Mixin podían llegar a abrir el .jar mientras
-            // todavía se estaba escribiendo (o mientras Windows Defender lo
-            // escaneaba al detectar el nombre final ya creado) y leerlo
-            // incompleto — eso es lo que producía "resource invalid or could
-            // not be read" al cargar lockout-client.mixins.json.
-            const tmpDest = `${dest}.tmp-${crypto.randomBytes(4).toString('hex')}`;
-            const fd = fs.openSync(tmpDest, 'w');
-            try {
-                fs.writeSync(fd, plaintext);
-                fs.fsyncSync(fd);
-            } finally {
-                fs.closeSync(fd);
-            }
-            fs.renameSync(tmpDest, dest);
-            writtenPaths.push(dest);
+    for (const f of decryptedFiles) {
+        const dest = path.join(modsDir, f.filename);
+        const tmpDest = `${dest}.tmp-${crypto.randomBytes(4).toString('hex')}`;
+        const fd = fs.openSync(tmpDest, 'w');
+        try {
+            fs.writeSync(fd, f.plaintext);
+            fs.fsyncSync(fd);
+        } finally {
+            fs.closeSync(fd);
         }
-    } catch (err) {
-        deleteWithRetry(writtenPaths, 1, 0);
-        throw new Error(`No se pudo descifrar/escribir un mod protegido: ${err.message}`);
+        fs.renameSync(tmpDest, dest);
+        writtenPaths.push(dest);
     }
-
-    return { cleanup: () => deleteWithRetry(writtenPaths) };
+    return writtenPaths;
 }
 
-export { installEphemeralMods };
+/**
+ * Reintenta borrar archivos que puedan seguir bloqueados por la JVM
+ * (frecuente en Windows si Fabric/Knot mantiene el jar abierto para
+ * carga perezosa de recursos). Si tras los reintentos sigue bloqueado,
+ * queda como red de seguridad el borrado-antes-de-escribir del próximo
+ * lanzamiento — no es un borrado instantáneo garantizado.
+ */
+function deleteEphemeralMods(filePaths, attemptsLeft = 5, delayMs = 1500) {
+    const remaining = [];
+    for (const p of filePaths) {
+        try {
+            if (fs.existsSync(p)) fs.unlinkSync(p);
+        } catch (_) {
+            remaining.push(p);
+        }
+    }
+    if (remaining.length && attemptsLeft > 0) {
+        setTimeout(() => deleteEphemeralMods(remaining, attemptsLeft - 1, delayMs), delayMs);
+    }
+}
+
+export { fetchEphemeralMods, writeEphemeralModsSync, deleteEphemeralMods };

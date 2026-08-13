@@ -5,7 +5,7 @@
 import config from '../utils/config.js';
 import { database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js';
 import { installPackwiz } from '../utils/packwiz.js';
-import { installEphemeralMods } from '../utils/ephemeralMods.js';
+import { fetchEphemeralMods, writeEphemeralModsSync, deleteEphemeralMods } from '../utils/ephemeralMods.js';
 
 const { Launch } = require('minecraft-java-core');
 const { ipcRenderer } = require('electron');
@@ -502,7 +502,7 @@ class Home {
         text.textContent = 'Preparando…';
 
         const instancePath = `${opt.path}/instances/${opt.instance}`;
-        let ephemeralCleanup = null;
+        let ephemeralPendingFiles = null;
 
         // === packwiz: instalar/actualizar mods desde Modrinth/CurseForge (CDN),
         //     no desde nuestro servidor, antes de que minecraft-java-core arranque ===
@@ -537,19 +537,16 @@ class Home {
             text.textContent = 'Preparando…';
         }
 
-        // === Mods protegidos: se descifran a mods/ solo por la ventana de
-        //     arranque (ver ephemeralMods.js) — nunca quedan permanentemente
-        //     descargables en el servidor ni en la carpeta de la instancia ===
+        // === Mods protegidos: se piden y descifran en MEMORIA acá (con tiempo
+        //     de sobra), pero el .jar recién se escribe a disco en el instante
+        //     sincrónico exacto antes del spawn de la JVM (ver el listener de
+        //     'data' más abajo) — así el archivo en texto plano existe en
+        //     mods/ por el mínimo tiempo posible, no durante toda la descarga.
         if (options.ephemeral_mods?.length) {
             text.textContent = 'Preparando contenido protegido…';
             try {
                 const apiBase = pkg.user ? `${pkg.url}/${pkg.user}` : pkg.url;
-                const { cleanup } = await installEphemeralMods({
-                    instance: options.name,
-                    instancePath,
-                    apiBase
-                });
-                ephemeralCleanup = cleanup;
+                ephemeralPendingFiles = await fetchEphemeralMods({ instance: options.name, apiBase });
             } catch (err) {
                 console.error('[Home] ephemeral mods error', err);
                 writeLaunchLog(logBase, `ERROR ephemeral mods: ${err?.message || err}`);
@@ -581,7 +578,6 @@ class Home {
         })();
 
         const launch = new Launch();
-        launch.Launch(opt);
 
         launch.on('progress', (p, s) => {
             const pct = ((p / s) * 100).toFixed(0);
@@ -606,8 +602,26 @@ class Home {
 
         let hideTimer = null;
         let ephemeralCleanupTimer = null;
+        let ephemeralWrittenPaths = null;
 
-        launch.on('data', () => {
+        launch.on('data', (msg) => {
+            // Este es el ÚNICO 'data' que minecraft-java-core emite ANTES de
+            // hacer spawn() de la JVM (ver Launch.js: emit('data', 'Launching
+            // with arguments...') y en la línea siguiente, sin ningún await de
+            // por medio, spawn()). Como los listeners corren sincrónicamente,
+            // escribir el mod protegido AQUÍ — no antes — hace que exista en
+            // disco por una fracción de segundo en vez de durante toda la
+            // descarga/verificación previa del juego.
+            if (ephemeralPendingFiles && typeof msg === 'string' && msg.startsWith('Launching with arguments')) {
+                try {
+                    ephemeralWrittenPaths = writeEphemeralModsSync(instancePath, ephemeralPendingFiles);
+                } catch (err) {
+                    console.error('[Home] ephemeral mods write error', err);
+                    writeLaunchLog(logBase, `ERROR escribiendo mods protegidos: ${err?.message || err}`);
+                }
+                ephemeralPendingFiles = null;
+            }
+
             bar.style.display = 'none';
             text.innerHTML = `Iniciando juego...`;
             writeLaunchLog(logBase, 'Proceso del juego arrancado, esperando confirmación antes de ocultar el launcher.');
@@ -619,13 +633,19 @@ class Home {
                     ipcRenderer.send('main-window-hide');
                 }, 8000);
             }
-            if (ephemeralCleanup) {
+            if (ephemeralWrittenPaths && !ephemeralCleanupTimer) {
                 // Da tiempo a que Fabric ya haya leído el mod protegido de disco
                 // antes de borrarlo — el proceso ya está arrancando en este punto.
+                // OJO: no limpia ephemeralWrittenPaths acá. Si Fabric/Knot sigue
+                // con el .jar abierto (normal en Windows durante toda la sesión),
+                // este intento falla y reintenta unas veces, pero la referencia
+                // se mantiene — restoreUI() (en 'close'/'error') vuelve a intentar
+                // cuando la JVM ya soltó el archivo. deleteEphemeralMods es
+                // idempotente (chequea fs.existsSync), así que llamarla más de
+                // una vez es seguro.
                 ephemeralCleanupTimer = setTimeout(() => {
                     ephemeralCleanupTimer = null;
-                    ephemeralCleanup?.();
-                    ephemeralCleanup = null;
+                    deleteEphemeralMods(ephemeralWrittenPaths);
                 }, 5000);
             }
             new logger('Minecraft', '#36b030');
@@ -649,9 +669,9 @@ class Home {
                 clearTimeout(ephemeralCleanupTimer);
                 ephemeralCleanupTimer = null;
             }
-            if (ephemeralCleanup) {
-                ephemeralCleanup();
-                ephemeralCleanup = null;
+            if (ephemeralWrittenPaths) {
+                deleteEphemeralMods(ephemeralWrittenPaths);
+                ephemeralWrittenPaths = null;
             }
             ipcRenderer.send('main-window-progress-reset');
             box.style.display = 'none';
@@ -684,6 +704,10 @@ class Home {
             restoreUI();
             console.error(err);
         });
+
+        // Recién ahora, con TODOS los listeners ya enganchados (incluido el
+        // de 'data' que escribe el mod protegido), se dispara el lanzamiento.
+        launch.Launch(opt);
     }
 
     escapeHTML(str = "") {
