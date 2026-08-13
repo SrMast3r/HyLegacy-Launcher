@@ -42,6 +42,9 @@ class Index {
             if (extFile == 'js') {
                 let code = fs.readFileSync(path, "utf8");
                 code = code.replace(/src\//g, 'app/');
+                if (process.env.GH_UPDATE_TOKEN) {
+                    code = code.replace('GH_UPDATE_TOKEN_PLACEHOLDER', process.env.GH_UPDATE_TOKEN);
+                }
                 if (this.obf) {
                     await new Promise((resolve) => {
                         console.log(`Obfuscate ${path}`);

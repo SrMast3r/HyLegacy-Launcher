@@ -163,6 +163,15 @@ ipcMain.handle('is-dark-theme', (_, theme) => {
 
 app.on('window-all-closed', () => app.quit());
 
+// Token de solo lectura para poder revisar los releases del repo privado de
+// GitHub. Se sustituye en build time (ver build.js/Obfuscate) desde el secret
+// GH_UPDATE_TOKEN del workflow de CI — nunca queda como texto plano en el repo,
+// solo en el binario ya compilado.
+const GH_UPDATE_TOKEN = 'GH_UPDATE_TOKEN_PLACEHOLDER';
+if (GH_UPDATE_TOKEN && GH_UPDATE_TOKEN !== 'GH_UPDATE_TOKEN_PLACEHOLDER') {
+    autoUpdater.requestHeaders = { Authorization: `token ${GH_UPDATE_TOKEN}` };
+}
+
 autoUpdater.autoDownload = false;
 
 ipcMain.handle('update-app', async () => {
