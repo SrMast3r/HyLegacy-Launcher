@@ -32,3 +32,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_UPDATE_TOKEN: ${{ secrets.GH_UPDATE_TOKEN }}
+          EPHEMERAL_CLIENT_KEY: ${{ secrets.EPHEMERAL_CLIENT_KEY }}
