@@ -30,20 +30,36 @@ async function setBackground(theme) {
     const body = document.body;
     body.className = theme ? 'dark global' : 'light global';
 
+    // Fondo de arte: SOLO estas dos imágenes, elegidas al azar
+    // (cambia cada vez que se abre el launcher o se cambia de tema)
+    const BACKGROUNDS = ['background_01.png', 'background_02.png'];
     let background;
-    // Easter egg aleatorio (0.5%)
-    if (fs.existsSync(`${__dirname}/assets/images/background/easterEgg`) && Math.random() < 0.005) {
-        const arr = fs.readdirSync(`${__dirname}/assets/images/background/easterEgg`);
-        const pick = arr[Math.floor(Math.random() * arr.length)];
-        background = `url(./assets/images/background/easterEgg/${pick})`;
-    } else if (fs.existsSync(`${__dirname}/assets/images/background/${theme ? 'dark' : 'light'}`)) {
-        const arr = fs.readdirSync(`${__dirname}/assets/images/background/${theme ? 'dark' : 'light'}`);
-        const pick = arr[Math.floor(Math.random() * arr.length)];
-        background = `linear-gradient(#00000080, #00000080), url(./assets/images/background/${theme ? 'dark' : 'light'}/${pick})`;
+    const bgDir = `${__dirname}/assets/images/background`;
+    const available = BACKGROUNDS.filter(f => fs.existsSync(`${bgDir}/${f}`));
+    if (available.length) {
+        const pick = available[Math.floor(Math.random() * available.length)];
+        // Ruta absoluta file:// — una relativa aquí se resuelve distinto según
+        // quién la consuma y rompía la carga.
+        const absPath = `${bgDir}/${pick}`.replace(/\\/g, '/');
+        background = `url('file:///${absPath.replace(/^\/+/, '')}')`;
     }
 
-    body.style.backgroundImage = background ? background : (theme ? '#000' : '#fff');
-    body.style.backgroundSize = 'cover';
+    // Se pinta en un <div> real aparte (#app-bg, ver launcher.css) para poder
+    // desenfocarlo con filter sin desenfocar la interfaz encima.
+    let bgEl = document.getElementById('app-bg');
+    if (!bgEl) {
+        bgEl = document.createElement('div');
+        bgEl.id = 'app-bg';
+        body.insertBefore(bgEl, body.firstChild);
+    }
+
+    if (background) {
+        bgEl.style.backgroundImage = background;
+        body.style.backgroundColor = '';
+    } else {
+        bgEl.style.backgroundImage = 'none';
+        body.style.backgroundColor = theme ? '#000' : '#fff';
+    }
 }
 
 /* =================== Paneles =================== */

@@ -1,5 +1,16 @@
 <!-- src/panels/settings.html -->
-<div class="container">
+<div class="settings-shell">
+    <div class="status-server" role="status" aria-live="polite">
+        <div class="status-center">
+            <span class="server-status-name">Ajustes</span>
+        </div>
+    </div>
+
+    <div class="shell">
+        <main class="mainpanes">
+            <section class="pane is-active" style="position:static;opacity:1;pointer-events:auto;height:100%;">
+                <div class="surface surface--settings">
+
     <!-- Navegación lateral -->
     <div class="nav-settings">
         <p>Ajustes</p>
@@ -138,6 +149,45 @@
                 <div class="close-none close-btn">Mantener el launcher abierto</div>
                 <div class="close-all close-btn">Cerrar el juego si se cierra el launcher</div>
             </div>
+        </div>
+    </div>
+
+                </div>
+            </section>
+        </main>
+
+        <div class="shell-gap" aria-hidden="true"></div>
+
+        <!-- RAIL — igual que en Home/Instancias, para poder volver -->
+        <nav class="rail" aria-label="Navegación secundaria">
+            <div class="rail__track"></div>
+
+            <button class="rail-btn" data-nav="home" aria-label="Inicio" title="Inicio">
+                <span class="rail-icon rail-icon--home" aria-hidden="true"></span>
+            </button>
+
+            <button class="rail-btn" data-nav="instances" aria-label="Instancias" title="Instancias">
+                <span class="rail-icon rail-icon--instances" aria-hidden="true"></span>
+            </button>
+
+            <button class="rail-btn is-active" aria-label="Ajustes" title="Ajustes">
+                <span class="rail-icon rail-icon--profile" aria-hidden="true"></span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- FOOTER — mismo que Home/Instancias, para poder jugar sin salir de Ajustes -->
+    <div class="sidebar" role="toolbar">
+        <div class="player-slot">
+            <div class="player-head" aria-label="Avatar del jugador"></div>
+            <div class="player-meta">
+                <div class="player-nick settings-player-nick">Jugador</div>
+                <div class="player-sub">Conectado</div>
+            </div>
+        </div>
+
+        <div class="play-zone">
+            <button class="play-btn settings-play-btn" aria-label="Jugar">Jugar</button>
         </div>
     </div>
 </div>

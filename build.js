@@ -61,6 +61,9 @@ class Index {
     async buildPlatform() {
         await this.Obfuscate();
         builder.build({
+            // Solo publica (sube el release a GitHub) cuando corre en CI con un token
+            // disponible; en una máquina local solo compila a ./dist sin publicar nada.
+            publish: process.env.GH_TOKEN ? 'always' : 'never',
             config: {
                 generateUpdatesFilesForAllChannels: false,
                 appId: preductname,

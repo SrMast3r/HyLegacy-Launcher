@@ -4,6 +4,7 @@
  */
 import config from '../utils/config.js';
 import { database, logger, changePanel, appdata, setStatus, pkg, popup } from '../utils.js';
+import { installPackwiz } from '../utils/packwiz.js';
 
 const { Launch } = require('minecraft-java-core');
 const { ipcRenderer } = require('electron');
@@ -45,6 +46,7 @@ class Home {
                 paneHome: document.getElementById('pane-home'),
                 paneInstances: document.getElementById('pane-instances'),
                 instancesList: document.querySelector('.instances-List'),
+                instancesSearch: document.querySelector('.instances-search-input'),
 
                 playerNick: document.querySelector('.player-nick'),
                 playBtn: document.querySelector('.play-btn'),
@@ -62,6 +64,30 @@ class Home {
             this.$.settingsBtn?.addEventListener('click', () => changePanel('settings'));
             this.$.railSettings?.addEventListener('click', () => changePanel('settings'));
             this.$.playBtn?.addEventListener('click', () => this.startGame());
+            this.$.instancesSearch?.addEventListener('input', () => this.filterInstances(this.$.instancesSearch.value));
+
+            // Navegación de vuelta desde Ajustes (rail propio, misma UX)
+            document.addEventListener('hy:navigate-home', (e) => {
+                const target = e.detail?.pane;
+                if (!target) return;
+                // Sin animación interna aquí: el panel exterior (Home) ya hace su
+                // propio crossfade al activarse (changePanel); animar también el
+                // pane interno duplica el efecto y se ve como un parpadeo/recarga.
+                const panes = [this.$.paneHome, this.$.paneInstances].filter(Boolean);
+                this.cancelPaneAnimations(this.$.paneHome);
+                this.cancelPaneAnimations(this.$.paneInstances);
+                panes.forEach(p => {
+                    const isTarget = p.id === target;
+                    p.classList.toggle('is-active', isTarget);
+                    p.hidden = !isTarget;
+                });
+                this.setRailActive(target);
+                if (target === 'pane-instances') this.refreshInstancesGrid();
+                else this.refreshHeroFromSelection();
+            });
+
+            // Jugar desde el footer de Ajustes (dispara el mismo flujo de lanzamiento)
+            document.addEventListener('hy:play-now', () => this.startGame());
 
             // ✅ RAIL: manejador robusto
             this.$.railBtns.forEach(btn => {
@@ -320,7 +346,17 @@ class Home {
         }
     }
 
-    /* ======= NAV (robusto, no depende de onfinish) ======= */
+    filterInstances(query) {
+        const q = (query || '').trim().toLowerCase();
+        const cards = this.$.instancesList?.querySelectorAll('.instance-card') || [];
+        cards.forEach(card => {
+            const name = (card.dataset.name || '').toLowerCase();
+            card.style.display = !q || name.includes(q) ? '' : 'none';
+        });
+    }
+
+    /* ======= NAV — crossfade real: el saliente se desvanece mientras
+       el entrante aparece, ambos superpuestos (sin salto de layout) ======= */
     switchPane(targetId) {
         const panes = [this.$.paneHome, this.$.paneInstances].filter(Boolean);
         const next = panes.find(p => p.id === targetId);
@@ -332,25 +368,38 @@ class Home {
         const current = panes.find(p => p.classList.contains('is-active'));
         if (current === next) return;
 
-        // cancelar animaciones
-        if (current) this.cancelPaneAnimations(current);
+        this.cancelPaneAnimations(current);
         this.cancelPaneAnimations(next);
 
-        // ocultar current
+        const DURATION = 240;
+        const EASE_OUT = 'cubic-bezier(.4,0,.7,1)';
+        const EASE_IN = 'cubic-bezier(.21,.98,.24,.99)';
+
         if (current) {
             current.classList.remove('is-active');
-            current.hidden = true;
+            try {
+                const anim = current.animate(
+                    [
+                        { opacity: 1, transform: 'none' },
+                        { opacity: 0, transform: 'translateY(-10px) scale(.99)' }
+                    ],
+                    { duration: DURATION, easing: EASE_OUT }
+                );
+                anim.onfinish = () => { current.hidden = true; };
+            } catch (_) {
+                current.hidden = true;
+            }
         }
 
-        // mostrar next
         next.hidden = false;
         next.classList.add('is-active');
-
-        // animación decorativa
         try {
             next.animate(
-                [{ opacity: 0, transform: 'translateY(-8px) scale(.995)' }, { opacity: 1, transform: 'none' }],
-                { duration: 180, easing: 'cubic-bezier(.21,.98,.24,.99)' }
+                [
+                    { opacity: 0, transform: 'translateY(14px) scale(.99)' },
+                    { opacity: 1, transform: 'none' }
+                ],
+                { duration: DURATION, easing: EASE_IN }
             );
         } catch (_) {}
     }
@@ -419,6 +468,39 @@ class Home {
         bar.value = 0;
         bar.max = 0;
         text.textContent = 'Preparando…';
+
+        // === packwiz: instalar/actualizar mods desde Modrinth/CurseForge (CDN),
+        //     no desde nuestro servidor, antes de que minecraft-java-core arranque ===
+        if (options.packwiz_url) {
+            text.textContent = 'Actualizando mods…';
+            const instancePath = `${opt.path}/instances/${opt.instance}`;
+            try {
+                await installPackwiz({
+                    packwizUrl: options.packwiz_url,
+                    instancePath,
+                    javaPath: cfg?.java_config?.java_path,
+                    runtimeRoot: `${opt.path}/runtime`,
+                    cacheDir: `${opt.path}/packwiz`,
+                    onProgress: (line) => {
+                        const last = line.trim().split(/\r?\n/).pop();
+                        if (last) text.textContent = last;
+                    }
+                });
+            } catch (err) {
+                console.error('[Home] packwiz error', err);
+                btn.disabled = false;
+                btn.style.display = 'inline-flex';
+                box.style.display = 'none';
+                new popup().openPopup({
+                    title: 'Error al actualizar mods',
+                    content: err?.message || String(err),
+                    color: 'red',
+                    options: true
+                });
+                return;
+            }
+            text.textContent = 'Preparando…';
+        }
 
         ipcRenderer.send('main-window-progress-load');
 

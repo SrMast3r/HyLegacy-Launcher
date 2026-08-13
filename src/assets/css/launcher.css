@@ -11,6 +11,22 @@ body {
     color: var(--color);
     font-family: 'Poppins';
     font-weight: bolder;
+    position: relative;
+}
+
+/* Fondo de arte (background_01/02.png, ver setBackground en utils.js), en su
+   propio layer para poder desenfocarlo sin desenfocar la interfaz encima.
+   Es un <div> real (#app-bg), primer hijo de body, en vez de un ::before con
+   z-index negativo — esa combinación con filter no componía bien en Electron.
+   Se agranda más allá del viewport para que el blur no deje bordes transparentes. */
+#app-bg {
+    position: fixed;
+    inset: -60px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(18px);
+    pointer-events: none;
 }
 
 img {
@@ -186,10 +202,13 @@ input::-webkit-inner-spin-button {
     opacity: 0;
     z-index: 0;
     pointer-events: none;
+    transform: translateY(10px) scale(.99);
+    transition: opacity .26s cubic-bezier(.22,.9,.24,1), transform .26s cubic-bezier(.22,.9,.24,1);
 }
 
 .active {
     opacity: 1;
     z-index: 1;
     pointer-events: all;
+    transform: none;
 }

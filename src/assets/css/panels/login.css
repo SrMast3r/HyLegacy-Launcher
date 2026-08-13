@@ -130,7 +130,7 @@ html, body {
 .input-login input::placeholder { color: rgba(255,255,255,.65); }
 .input-login input:focus {
     border-color: var(--element-color);
-    box-shadow: 0 0 0 2px rgba(45,255,136,.18);
+    box-shadow: 0 0 0 2px rgba(46,219,110,.22);
     background: rgba(255,255,255,.07);
 }
 
@@ -146,9 +146,9 @@ html, body {
     transition: transform .08s ease, filter .12s ease, box-shadow .12s ease;
 }
 .connect {
-    color: #03140A;
-    background: linear-gradient(135deg, #2DFF88, #1BCB68);
-    box-shadow: 0 0 12px rgba(45,255,136,.35), 0 0 24px rgba(45,255,136,.18), inset 0 0 0 1px rgba(255,255,255,.22);
+    color: #04170B;
+    background: linear-gradient(135deg, #2EDB6E, #12A24A);
+    box-shadow: 0 0 12px rgba(46,219,110,.4), 0 0 24px rgba(46,219,110,.22), inset 0 0 0 1px rgba(255,255,255,.22);
 }
 .cancel {
     color: var(--color);

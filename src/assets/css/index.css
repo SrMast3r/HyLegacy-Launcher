@@ -23,9 +23,9 @@ body{
     --panel-strong: rgba(255,255,255,.12);
     --radius: 18px;
 
-    --neon:#2DFF88;
-    --neon-2:#1BCB68;
-    --glow: 0 0 16px rgba(45,255,136,.45), 0 0 36px rgba(45,255,136,.2);
+    --neon:#2EDB6E;
+    --neon-2:#12A24A;
+    --glow: 0 0 16px rgba(46,219,110,.45), 0 0 36px rgba(46,219,110,.2);
 
     --grid-color: rgba(255,255,255,.06);
 }
@@ -37,12 +37,12 @@ body{
 }
 .blob.b1{
     width:60vmax; height:60vmax; left:-10vmax; top:-6vmax;
-    background:radial-gradient(closest-side, rgba(120,160,255,.20), transparent 60%);
+    background:radial-gradient(closest-side, rgba(124,255,160,.18), transparent 60%);
     animation:blobFloat1 18s ease-in-out infinite;
 }
 .blob.b2{
     width:50vmax; height:50vmax; right:-8vmax; top:10vmax;
-    background:radial-gradient(closest-side, rgba(45,255,136,.22), transparent 60%);
+    background:radial-gradient(closest-side, rgba(46,219,110,.24), transparent 60%);
     animation:blobFloat2 20s ease-in-out infinite;
 }
 @keyframes blobFloat1{0%,100%{transform:translateY(0)}50%{transform:translateY(-4%)}}
@@ -94,7 +94,7 @@ body{
 /* borde glow */
 .card::before{
     content:""; position:absolute; inset:-1px; border-radius:inherit; z-index:-1;
-    background:linear-gradient(135deg, rgba(45,255,136,.45), rgba(120,160,255,.35), rgba(45,255,136,.45));
+    background:linear-gradient(135deg, rgba(46,219,110,.45), rgba(124,255,160,.35), rgba(46,219,110,.45));
     filter:blur(16px); opacity:.35; animation:borderGlow 6s ease-in-out infinite;
 }
 @keyframes borderGlow{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:.45;transform:translateY(-2px)}}
@@ -119,9 +119,9 @@ body{
 h1, h2, h3, p{ margin:0; }             /* elimina empujes verticales */
 .headline{
     font-weight:900; font-size:clamp(20px, 4vw, 26px); letter-spacing:.3px;
-    background:linear-gradient(90deg,#fff,#c9ffe2 40%,#cfe1ff 70%,#fff 100%);
+    background:linear-gradient(90deg,#fff,#b9ffce 40%,#e8fff0 70%,#fff 100%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
-    text-shadow:0 0 12px rgba(45,255,136,.15);
+    text-shadow:0 0 12px rgba(46,219,110,.2);
     margin-top:6px;
 }
 .status{ color:rgba(233,240,255,.85); font-size:14px; margin-top:6px; }

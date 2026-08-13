@@ -1,84 +1,80 @@
-/* =========================
-   SETTINGS (Ajustes) – Estilo
-   Compacto, moderno y consistente con el Home
-   ========================= */
+/* =========================================================================
+   SETTINGS (Ajustes) — mismo lenguaje visual que Home/Instancias
+   Verde esmeralda degradado, vidrio oscuro, mismos radios y acentos.
+   ========================================================================= */
 
-/* Paleta local (usa tus variables globales si existen) */
-:root{
-    --set-panel: var(--panel, rgba(22,25,34,.55));
-    --set-panel-strong: var(--panel-strong, rgba(22,25,34,.8));
-    --set-stroke: var(--stroke, rgba(255,255,255,.08));
-    --set-brand: var(--brand, #7c9cff);
-    --set-brand-2: var(--brand-2, #8ff0a4);
-    --set-text: var(--txt, #eef2ff);
-    --set-muted: var(--muted, #9aa4b2);
-    --set-ok: var(--success, #1AC707);
-    --set-danger: var(--danger, #FF3B3B);
-}
-
-/* ===== Fondo de Ajustes con hero de la instancia ===== */
-.settings .container{
-    position: relative;
-    isolation: isolate;           /* contexto para z-index */
-    --settings-hero: none;        /* se setea desde JS */
-}
-
-/* Capa de imagen */
-.settings .container::before{
+/* Fondo ambiental — igual al de Home (scrim semitransparente sobre el arte de body) */
+.settings::before{
     content:"";
-    position:absolute;
+    position:fixed;
     inset:0;
-    border-radius: 16px;
-    background-image: var(--settings-hero);
-    background-size: cover;
-    background-position: center;
-    filter: brightness(.78);
-    z-index:-2;
-}
-
-/* Viñeta/oscurecido para legibilidad */
-.settings .container::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    border-radius: 16px;
-    background: radial-gradient(70% 70% at 50% 40%, rgba(0,0,0,.0), rgba(0,0,0,.45) 70%, rgba(0,0,0,.65) 100%);
     z-index:-1;
+    pointer-events:none;
+    background:
+        radial-gradient(1100px 620px at 50% 108%, rgba(46,219,110,.14), transparent 60%),
+        radial-gradient(900px 500px at 85% -10%, rgba(124,255,160,.10), transparent 55%),
+        linear-gradient(180deg, rgba(7,20,16,.22) 0%, rgba(6,16,13,.28) 55%, rgba(8,24,17,.24) 100%);
 }
 
-/* ===== Layout general (compacto y centrado) ===== */
-.settings .container{
+/* ===== Layout general — reutiliza .shell/.rail/.mainpanes/.surface de Home,
+   con exactamente el mismo alto reservado arriba/abajo para que el rail y el
+   contenido no cambien de tamaño al cambiar de pestaña ===== */
+.settings-shell{
+    height:100vh;
+    padding:calc(var(--gapV, 1.15rem)/1.5) 0;
+    display:flex;
+    flex-direction:column;
+    gap:var(--gapV, 1.15rem);
+}
+.settings-shell .status-server{ flex:0 0 auto; }
+.settings-shell .sidebar{ flex:0 0 auto; }
+.settings-shell .shell{
+    width:min(var(--pageW, 1220px), 96vw);
+    margin:0 auto;
     display:grid;
-    grid-template-columns: 240px min(860px, 72vw);
+    grid-template-columns: var(--railW, 82px) var(--colGap, 14px) minmax(0,1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items:stretch;
+    flex:1 1 auto;
+    min-height:0;
+}
+.settings-shell .mainpanes{ grid-column:3/4; grid-row:1/2; }
+.settings-shell .shell-gap{ grid-column:2/3; grid-row:1/2; }
+.settings-shell .rail{ grid-column:1/2; grid-row:1/2; }
+
+/* La superficie de Ajustes es una fila (nav lateral + contenido), no una columna como el hero */
+.surface--settings{
+    display:grid;
+    grid-template-columns: 220px minmax(0,1fr);
     gap: 1rem;
-    width: min(1120px, 94vw);
-    height: min(82vh, 720px);
-    margin: auto;
-    padding: 12px;
-    border-radius: 16px;
-    overflow: hidden;  /* evita scroll exterior */
+    height:100%;
+    padding:0;
+    overflow:hidden;
 }
 
 /* =========================
    Navegación lateral
    ========================= */
 .nav-settings{
-    background: var(--set-panel);
-    border: 1px solid var(--set-stroke);
-    backdrop-filter: blur(12px);
-    border-radius: 14px;
-    padding: 12px;
+    background: var(--panel-strong, rgba(6,15,11,.88));
+    border: 1px solid var(--stroke, rgba(170,255,200,.14));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 14px;
     display:flex;
     flex-direction:column;
     min-height: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
 }
 
 .nav-settings p{
-    color: var(--set-muted);
-    font-weight: 800;
-    letter-spacing:.3px;
-    font-size: .95rem;
-    margin: 2px 6px 8px;
+    color: var(--muted, #9FC7AE);
+    font-weight: 900;
+    letter-spacing:.4px;
+    text-transform: uppercase;
+    font-size: .8rem;
+    margin: 4px 8px 12px;
 }
 
 .nav-box{
@@ -90,91 +86,106 @@
 }
 
 .nav-settings-btn{
-    font-size: .95rem;
+    font-size: .88rem;
+    font-weight: 800;
+    letter-spacing: .3px;
     line-height: 1;
-    color: var(--set-text);
+    color: var(--txt, #EAFCEF);
     text-align: center;
-    border: 1px solid var(--set-stroke);
-    background: rgba(255,255,255,.04);
-    padding: .65rem .8rem;
+    border: 1px solid var(--stroke, rgba(170,255,200,.14));
+    background: rgba(255,255,255,.03);
+    padding: .8rem .8rem;
     border-radius: 12px;
     cursor: pointer;
     transition: transform .12s ease, background .12s ease, border-color .12s ease;
 }
 
 .nav-settings-btn:hover{
-    background: rgba(255,255,255,.07);
+    background: rgba(46,219,110,.1);
+    border-color: var(--stroke-strong, rgba(170,255,200,.34));
     transform: translateY(-1px);
 }
 
 .active-settings-BTN{
-    background: linear-gradient(135deg, var(--set-brand), var(--set-brand-2));
-    color: #0b0e13;
+    background: linear-gradient(135deg, var(--gold, #2EDB6E), var(--gold-2, #12A24A));
+    color: #04170B;
     border-color: transparent;
     font-weight: 900;
+    box-shadow: var(--gold-glow, 0 0 14px rgba(46,219,110,.5));
 }
 
-/* Botón Guardar / Volver (id="save") destacado y al fondo */
+/* Botón Guardar / Volver, destacado y fijo al fondo */
 .nav-box #save{
     margin-top: auto;
-    background: linear-gradient(135deg, var(--set-brand), var(--set-brand-2));
-    color: #0b0e13;
+    background: linear-gradient(135deg, var(--gold, #2EDB6E), var(--gold-2, #12A24A));
+    color: #04170B;
     border-color: transparent;
     font-weight: 900;
+    box-shadow: var(--gold-glow, 0 0 14px rgba(46,219,110,.5));
 }
+.nav-box #save:hover{ filter: brightness(1.06); transform: translateY(-2px); }
 
 /* =========================
    Contenido de pestañas
    ========================= */
 .container-settings{
-    background: var(--set-panel);
-    border: 1px solid var(--set-stroke);
-    backdrop-filter: blur(12px);
-    border-radius: 14px;
-    padding: 14px 16px;
-    display: none;                 /* sólo se muestra la activa */
+    background: var(--panel, rgba(10,24,17,.58));
+    border: 1px solid var(--stroke, rgba(170,255,200,.14));
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 20px;
+    padding: 18px 20px;
+    display: none;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     height: 100%;
-    overflow: hidden;              /* sin scroll externo */
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
 }
 
 .active-container-settings{
     display: flex;
+    animation: settingsTabIn .24s cubic-bezier(.21,.98,.24,.99);
+}
+@keyframes settingsTabIn{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:none; }
 }
 
-/* Área scrolleable interna si hay mucho contenido */
-.container-settings.content-scroll{
-    overflow: auto;
-}
+.container-settings.content-scroll{ overflow: auto; }
 
-/* Título de cada sección/tab */
+/* Título de cada sección */
 .titre-tab{
-    display:flex; align-items:center; justify-content:center;
-    font-size: 1.25rem;
+    display:flex; align-items:center; gap:.6rem;
+    font-size: 1.1rem;
     font-weight: 900;
     letter-spacing: .2px;
-    color: var(--set-text);
-    background: rgba(255,255,255,.06);
-    border: 1px solid var(--set-stroke);
-    border-radius: 12px;
-    padding: .6rem 1rem;
-    margin: .2rem 0 .4rem;
+    color: var(--txt, #EAFCEF);
+    padding: .2rem 0 .4rem;
+    margin: 0;
+    border-bottom: 1px solid var(--stroke, rgba(170,255,200,.14));
+}
+.titre-tab::before{
+    content:"";
+    width:8px; height:8px; border-radius:50%; flex:0 0 auto;
+    background: var(--gold, #2EDB6E);
+    box-shadow: 0 0 8px rgba(46,219,110,.8);
 }
 
 /* Card/box de opciones */
 .settings-elements-box{
-    background: rgba(255,255,255,.04);
-    border: 1px solid var(--set-stroke);
-    border-radius: 12px;
+    background: linear-gradient(160deg, rgba(46,219,110,.07), rgba(10,24,17,.5));
+    border: 1px solid var(--stroke, rgba(170,255,200,.14));
+    border-radius: 16px;
     padding: 1rem 1.2rem;
 }
 
 .setting-text{
-    color: var(--set-muted);
-    font-size: .95rem;
-    line-height: 1.45;
+    color: var(--muted, #9FC7AE);
+    font-size: .92rem;
+    line-height: 1.5;
 }
+.setting-text b{ color: var(--txt, #EAFCEF); }
 
 /* Layout de filas de opciones */
 .settings-elements{
@@ -195,36 +206,44 @@
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: .8rem;
-    max-height: calc(100% - 70px);  /* bajo el título */
+    max-height: calc(100% - 70px);
     overflow: auto;
     padding-right: .2rem;
 }
 
 .account{
-    background: rgba(255,255,255,.04);
-    border: 1px solid var(--set-stroke);
-    border-radius: 12px;
+    background: linear-gradient(160deg, rgba(46,219,110,.08), rgba(10,24,17,.6));
+    border: 1px solid var(--stroke, rgba(170,255,200,.14));
+    border-radius: 16px;
     height: 92px;
     padding: .6rem .8rem;
     display:flex; align-items:center; justify-content:space-between;
+    transition: border-color .14s ease, transform .14s ease;
 }
+.account:hover{ transform: translateY(-2px); border-color: var(--stroke-strong, rgba(170,255,200,.34)); }
 
-.account-select{ border-color: rgba(124,156,255,.55); }
+.account-select{
+    border-color: rgba(46,219,110,.7);
+    box-shadow: 0 0 0 2px rgba(46,219,110,.4), var(--gold-glow, 0 0 14px rgba(46,219,110,.5));
+}
 
 .accounts-list #add{
     justify-content: center; cursor: pointer;
+    border-style: dashed;
 }
+.accounts-list #add:hover{ border-color: var(--gold, #2EDB6E); background: rgba(46,219,110,.06); }
 
 .add-profile{
     width:64px; height:64px;
     font-size: 2rem; display:grid; place-items:center;
     pointer-events:none;
     border-radius: 12px;
-    background: rgba(255,255,255,.06);
-    border: 1px dashed var(--set-stroke);
+    background: rgba(46,219,110,.08);
+    border: 1px dashed var(--stroke-strong, rgba(170,255,200,.34));
+    color: var(--gold, #2EDB6E);
 }
 .add-text-profile{
-    font-size:1rem; font-weight:800; color: var(--set-text);
+    font-size:1rem; font-weight:800; color: var(--txt, #EAFCEF);
     pointer-events:none;
 }
 
@@ -233,43 +252,42 @@
     background: url(../../images/default/setve.png) center/cover no-repeat;
     image-rendering: pixelated;
     pointer-events: none;
-    border:1px solid var(--set-stroke);
+    border:1px solid var(--stroke, rgba(170,255,200,.14));
 }
 
 .profile-infos{
     flex: 1;
     text-align: left;
     margin: 0 .8rem;
-    min-width: 0;                 /* para elipsis */
+    min-width: 0;
 }
 .profile-pseudo{
-    color: var(--set-text);
+    color: var(--txt, #EAFCEF);
     font-weight: 900;
     font-size: 1.05rem;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 .profile-uuid{
-    color: var(--set-muted);
+    color: var(--muted, #9FC7AE);
     font-size: .85rem;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
 
 .delete-profile{
     width:46px; height:46px;
-    background: rgba(255,255,255,.06);
-    border:1px solid var(--set-stroke);
-    color: #ff5c5c;
+    background: rgba(255,255,255,.04);
+    border:1px solid var(--stroke, rgba(170,255,200,.14));
+    color: #ff6b6b;
     display:grid; place-items:center;
     border-radius: 12px;
     cursor:pointer;
+    transition: background .14s ease, border-color .14s ease;
 }
-.delete-profile:hover{ background: rgba(255,0,0,.08); }
+.delete-profile:hover{ background: rgba(255,60,60,.1); border-color: rgba(255,60,60,.4); }
 
 /* =========================
    Pestaña: Java & Memoria (RAM)
    ========================= */
-
-/* Slider de RAM (doble manejador) */
 .memory-slider{
     position: relative;
     height: 18px;
@@ -292,8 +310,8 @@
 .slider-touch-right span{
     display:block;
     width: 20px; height: 10px;
-    background: #bbb;
-    border: 4px solid var(--set-brand);
+    background: #dff7e6;
+    border: 4px solid var(--gold, #2EDB6E);
     transition: background-color .2s, border .2s;
     border-radius: 18px;
     cursor: pointer;
@@ -302,7 +320,7 @@
 .slider-touch-left span:after,
 .slider-touch-right span:after{
     content: attr(value);
-    color: var(--set-text);
+    color: var(--txt, #EAFCEF);
     font: 700 12px/18px Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
     white-space: nowrap;
     pointer-events: none;
@@ -321,7 +339,7 @@
     top: 7px;
     height: 4px;
     border-radius: 4px;
-    background-color: rgba(255,255,255,.2);
+    background-color: rgba(255,255,255,.12);
     transition: background-color .2s;
     z-index: 0;
     overflow: hidden;
@@ -331,21 +349,22 @@
     display:block;
     height:100%;
     width:0%;
-    background: linear-gradient(135deg, var(--set-brand), var(--set-brand-2));
+    background: linear-gradient(135deg, var(--gold, #2EDB6E), var(--gold-2, #12A24A));
     transition: width .15s ease;
 }
 
 .ram-info-block{
-    color: var(--set-muted);
-    font-size: .95rem;
+    color: var(--muted, #9FC7AE);
+    font-size: .92rem;
 }
+.ram-info-block b{ color: var(--txt, #EAFCEF); }
 
 /* Java path */
 .java-path-input-text{
-    background: rgba(255,255,255,.06);
-    border: 1px solid var(--set-stroke);
-    color: var(--set-text);
-    padding: .5rem .8rem;
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--stroke, rgba(170,255,200,.14));
+    color: var(--txt, #EAFCEF);
+    padding: .55rem .8rem;
     border-radius: 10px;
     width: clamp(240px, 50%, 420px);
 }
@@ -355,22 +374,24 @@
     display:flex; align-items:center; gap:.6rem;
 }
 .java-path-btn{
-    padding: .45rem 1rem;
-    background: rgba(255,255,255,.08);
-    border:1px solid var(--set-stroke);
+    padding: .5rem 1rem;
+    background: rgba(46,219,110,.08);
+    border:1px solid var(--stroke, rgba(170,255,200,.14));
     border-radius: 10px;
     cursor:pointer;
-    color: var(--set-text);
+    color: var(--txt, #EAFCEF);
+    font-weight: 700;
+    transition: background .14s ease, border-color .14s ease;
 }
-.java-path-btn:hover{ background: rgba(255,255,255,.12); }
+.java-path-btn:hover{ background: rgba(46,219,110,.14); border-color: var(--stroke-strong, rgba(170,255,200,.34)); }
 
 /* =========================
    Pestaña: Launcher
    ========================= */
 .input-max-files{
-    background: rgba(255,255,255,.06);
-    border: 1px solid var(--set-stroke);
-    color: var(--set-text);
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--stroke, rgba(170,255,200,.14));
+    color: var(--txt, #EAFCEF);
     padding: .5rem .8rem;
     border-radius: 10px;
     text-align: center;
@@ -379,68 +400,71 @@
 }
 
 .max-files-btn{
-    padding: .45rem 1rem;
-    background: rgba(255,255,255,.08);
-    border:1px solid var(--set-stroke);
+    padding: .5rem 1rem;
+    background: rgba(46,219,110,.08);
+    border:1px solid var(--stroke, rgba(170,255,200,.14));
     border-radius: 10px;
     cursor:pointer;
-    color: var(--set-text);
+    color: var(--txt, #EAFCEF);
+    font-weight: 700;
+    transition: background .14s ease;
 }
-.max-files-btn:hover{ background: rgba(255,255,255,.12); }
+.max-files-btn:hover{ background: rgba(46,219,110,.14); }
 
 /* Tema */
 .theme-box{ gap: .6rem; }
 .theme-btn{
-    padding: .45rem 1.1rem;
+    padding: .5rem 1.1rem;
     border-radius: 999px;
     cursor: pointer;
-    border:1px solid var(--set-stroke);
-    background: rgba(255,255,255,.06);
-    color: var(--set-text);
+    border:1px solid var(--stroke, rgba(170,255,200,.14));
+    background: rgba(255,255,255,.04);
+    color: var(--txt, #EAFCEF);
     font-weight: 800;
     letter-spacing: .2px;
+    transition: background .14s ease, border-color .14s ease;
 }
-.theme-btn:hover{ background: rgba(255,255,255,.1); }
-.theme-btn-clair{ }
-.theme-btn-sombre{ }
-.theme-btn-auto{ }
+.theme-btn:hover{ background: rgba(46,219,110,.1); }
 .active-theme{
-    background: linear-gradient(135deg, var(--set-brand), var(--set-brand-2));
-    color: #0b0e13;
+    background: linear-gradient(135deg, var(--gold, #2EDB6E), var(--gold-2, #12A24A));
+    color: #04170B;
     border-color: transparent;
+    box-shadow: var(--gold-glow, 0 0 14px rgba(46,219,110,.5));
 }
 
 /* Cierre / comportamiento al iniciar */
 .close-box{ gap: .6rem; flex-wrap: wrap; }
 .close-btn{
-    font-size: .95rem;
+    font-size: .9rem;
     min-width: 220px;
     text-align: center;
-    border: 1px solid var(--set-stroke);
+    border: 1px solid var(--stroke, rgba(170,255,200,.14));
     border-radius: 12px;
-    padding: .6rem 1rem;
+    padding: .65rem 1rem;
     cursor: pointer;
-    background: rgba(255,255,255,.06);
-    color: var(--set-text);
+    background: rgba(255,255,255,.04);
+    color: var(--txt, #EAFCEF);
     font-weight: 700;
+    transition: background .14s ease, border-color .14s ease;
 }
-.close-btn:hover{ background: rgba(255,255,255,.1); }
+.close-btn:hover{ background: rgba(46,219,110,.1); }
 .active-close{
-    background: linear-gradient(135deg, var(--set-brand), var(--set-brand-2));
-    color: #0b0e13;
+    background: linear-gradient(135deg, var(--gold, #2EDB6E), var(--gold-2, #12A24A));
+    color: #04170B;
     border-color: transparent;
+    box-shadow: var(--gold-glow, 0 0 14px rgba(46,219,110,.5));
 }
 
 /* =========================
-   Ocultar pestaña Resolución (si aún existe en el HTML)
+   Ocultar pestaña Resolución (compat con JS)
    ========================= */
 #resolution, #resolution-tab{
     display:none !important;
 }
 
 /* =========================
-   Scrollbar sutil para contenedores con overflow
+   Scrollbar
    ========================= */
-.content-scroll{ scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; }
+.content-scroll{ scrollbar-width: thin; scrollbar-color: rgba(170,255,200,.25) transparent; }
 .content-scroll::-webkit-scrollbar{ width:8px; height:8px; }
-.content-scroll::-webkit
+.content-scroll::-webkit-scrollbar-thumb{ background:rgba(170,255,200,.25); border-radius:10px; }

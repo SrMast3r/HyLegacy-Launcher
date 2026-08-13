@@ -1,0 +1,9 @@
+packwiz-installer-bootstrap.jar is distributed by the packwiz project
+(https://github.com/packwiz/packwiz-installer-bootstrap) under the
+GNU General Public License v3.0 (GPL-3.0).
+
+Full license text: https://www.gnu.org/licenses/gpl-3.0.html
+
+This file is bundled unmodified with HyLegacy Launcher to run the
+packwiz pre-launch mod installer/updater step. It is not part of
+HyLegacy Launcher's own codebase or license.

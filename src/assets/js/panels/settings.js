@@ -17,6 +17,8 @@ class Settings {
         await this.applyInstanceBackground();
 
         this.navBTN();
+        this.railNav();
+        this.footer();
         this.accounts();
         this.ram();
         this.javaPath();
@@ -91,6 +93,34 @@ class Settings {
 
             activeTab?.classList.remove('active-container-settings');
             document.querySelector(`#${id}-tab`)?.classList.add('active-container-settings');
+        });
+    }
+
+    /** ===================== Rail — volver a Inicio/Instancias ===================== */
+    railNav() {
+        document.querySelectorAll('.settings-shell .rail-btn[data-nav]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.nav === 'instances' ? 'pane-instances' : 'pane-home';
+                document.dispatchEvent(new CustomEvent('hy:navigate-home', { detail: { pane: target } }));
+                changePanel('home');
+            });
+        });
+    }
+
+    /** ===================== Footer — jugador + Jugar (igual que Home) ===================== */
+    async footer() {
+        const cfg = await this.db.readData('configClient');
+        const acc = await this.db.readData('accounts', cfg?.account_selected);
+        const nick = acc?.name || acc?.username || acc?.profile?.name || 'Jugador';
+        const nickEl = document.querySelector('.settings-player-nick');
+        if (nickEl) nickEl.textContent = nick;
+
+        document.querySelector('.settings-play-btn')?.addEventListener('click', () => {
+            document.dispatchEvent(new CustomEvent('hy:navigate-home', { detail: { pane: 'pane-home' } }));
+            changePanel('home');
+            // pequeña espera para que el footer real de Home ya esté visible
+            // (barra de progreso) antes de disparar el lanzamiento.
+            setTimeout(() => document.dispatchEvent(new CustomEvent('hy:play-now')), 60);
         });
     }
 
