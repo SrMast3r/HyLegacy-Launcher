@@ -1,8 +1,18 @@
 <?php
+// Archivos propios de packwiz: minecraft-java-core no debe verlos ni intentar
+// descargarlos por su cuenta — packwiz-installer-bootstrap los maneja aparte,
+// directo desde el pack.toml (ver packwiz_url en instances.php).
+function isPackwizFile($filename) {
+    if ($filename === 'pack.toml' || $filename === 'index.toml' || $filename === 'packwiz.json') return true;
+    if (substr($filename, -8) === '.pw.toml') return true;
+    return false;
+}
+
 function scanAllDir($dir) {
     $result = [];
     foreach(scandir($dir) as $filename) {
         if ($filename[0] === '.') continue;
+        if (isPackwizFile($filename)) continue;
         $filePath = $dir . '/' . $filename;
         if (is_dir($filePath)) {
             foreach (scanAllDir($filePath) as $childFilename) {
