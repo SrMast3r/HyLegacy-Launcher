@@ -26,10 +26,25 @@ if (dev) {
 }
 
 if (!app.requestSingleInstanceLock()) app.quit();
-else app.whenReady().then(() => {
-    if (dev) return MainWindow.createWindow()
-    UpdateWindow.createWindow()
-});
+else {
+    // Si el launcher se ocultó (ej. "cerrar launcher al iniciar el juego") y
+    // el usuario intenta abrirlo de nuevo, Windows no abre una ventana nueva
+    // — sin este handler, el segundo intento se cerraba solo sin avisar y la
+    // única forma de recuperar el launcher era matarlo desde el Administrador
+    // de tareas. Ahora simplemente trae al frente la ventana que ya existe.
+    app.on('second-instance', () => {
+        const win = MainWindow.getWindow() || UpdateWindow.getWindow();
+        if (!win) return;
+        if (win.isMinimized()) win.restore();
+        win.show();
+        win.focus();
+    });
+
+    app.whenReady().then(() => {
+        if (dev) return MainWindow.createWindow()
+        UpdateWindow.createWindow()
+    });
+}
 
 ipcMain.on('main-window-open', () => MainWindow.createWindow())
 ipcMain.on('main-window-dev-tools', () => MainWindow.getWindow().webContents.openDevTools({ mode: 'detach' }))
