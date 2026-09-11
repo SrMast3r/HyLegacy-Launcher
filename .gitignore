@@ -1,6 +1,1 @@
 *.log
-
-# Secreto real del sistema de mods efímeros — nunca en el repo, se crea
-# a partir de ephemeral_secret.php.example en cada servidor.
-files/php/ephemeral_secret.php
-files/data/*.sqlite

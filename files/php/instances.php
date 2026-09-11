@@ -29,7 +29,6 @@ $instance['lockout'] = array_merge($instance['lockout'], array(
     "verify" => false,
     "ignored" => array(),
     "packwiz_url" => "https://launcher.hylegacy.com/files/instances/lockout/pack.toml",
-    "ephemeral_mods" => array("lockout-client"),
     "whitelist" => array(),
     "whitelistActive" => false,
     "status" => array(
