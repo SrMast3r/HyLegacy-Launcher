@@ -53,8 +53,8 @@ $instance['PeruLand'] = array_merge($instance['PeruLand'], array(
     "whitelistActive" => false,
     "status" => array(
         "nameServer" => "PeruLand",
-        "ip" => "CAMBIAR-A-TU-IP",
-        "port" => 25565
+        "ip" => "23.137.104.203",
+        "port" => 1120
     )
 ));
 ?>
