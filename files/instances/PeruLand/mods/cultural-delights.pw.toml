@@ -1,0 +1,13 @@
+name = "Cultural Delights"
+filename = "culturaldelights-0.17.7.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/YttyNOFA/versions/O8lDk3qa/culturaldelights-0.17.7.jar"
+hash-format = "sha512"
+hash = "9b04588518672e6bee5f8448b4bcdbd6d31b7e8b277f168f5c15d11bd9ec84e911cfe7843095bbb58fb19b6a153834bc656b4d9ae4bfc64a6bad44c12d670a0c"
+
+[update]
+[update.modrinth]
+mod-id = "YttyNOFA"
+version = "O8lDk3qa"

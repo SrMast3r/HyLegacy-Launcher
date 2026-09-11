@@ -1,0 +1,92 @@
+{
+  // Bookkeeping, not a setting. It records which defaults this file has already been brought
+  // up to date with. A file written before this existed reads back as 0.
+  "configVersion": 2,
+  // Welcome to the Nyctophobia Config!
+  //
+  // Configure the weight of the biomes by changing "nyctophobiaBiomeWeight".
+  // Configure which minecraft biomes can be replaced by Nyctophobia Biomes.
+  // A full list of all the biomes can be found here https:minecraft.fandom.com/wiki/Biome#Biome_IDs.
+  // A biome from another mod needs its full id, for example "biomesoplenty:bayou".
+  // Configure fog density and fog height.
+  "biomeConfigEntries": {
+    "haunted_lakes": {
+      "canGenerate": true,
+      "replaceableBiomes": [
+        "swamp"
+      ]
+    },
+    "marshlands": {
+      "canGenerate": true,
+      "replaceableBiomes": [
+        "mangrove_swamp",
+        "birch_forest"
+      ]
+    },
+    "haunted_forest": {
+      "canGenerate": true,
+      "replaceableBiomes": [
+        "windswept_forest",
+        "taiga"
+      ]
+    },
+    "eroded_haunted_forest": {
+      "canGenerate": true,
+      "replaceableBiomes": [
+        "meadow"
+      ]
+    },
+    "ancient_dead_coral_reef": {
+      "canGenerate": true,
+      "replaceableBiomes": [
+        "beach"
+      ]
+    },
+    "burnt_forest": {
+      "canGenerate": true,
+      "replaceableBiomes": [
+        "old_growth_pine_taiga",
+        "old_growth_spruce_taiga",
+        "windswept_hills"
+      ]
+    },
+    "deep_dark_forest": {
+      "canGenerate": true,
+      "replaceableBiomes": [
+        "dark_forest"
+      ]
+    }
+  },
+  "biomeFogConfigEntries": {
+    "marshlands_fog": {
+      "enabled": true,
+      "density": 0.25,
+      "minY": 55,
+      "maxY": 110
+    },
+    "haunted_forest_fog": {
+      "enabled": true,
+      "density": 0.35,
+      "minY": 63,
+      "maxY": 148
+    },
+    "haunted_lakes_fog": {
+      "enabled": true,
+      "density": 0.3,
+      "minY": 63,
+      "maxY": 128
+    },
+    "eroded_haunted_forest_fog": {
+      "enabled": true,
+      "density": 0.35,
+      "minY": 93,
+      "maxY": 160
+    }
+  },
+  "miscConfigEntries": {
+    "useSoulLanternsInHauntedLakes": false
+  },
+  "biomeGeneration": {
+    "nyctophobiaBiomeWeight": 1
+  }
+}

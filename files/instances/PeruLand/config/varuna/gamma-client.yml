@@ -1,0 +1,4 @@
+togglePercent: 1500.0
+stepPercent: 100.0
+minPercent: 100.0
+maxPercent: 1500.0

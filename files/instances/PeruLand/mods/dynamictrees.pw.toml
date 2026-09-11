@@ -1,0 +1,13 @@
+name = "Dynamic Trees"
+filename = "dynamictrees-fabric-1.21.1-1.7.2-BETA.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/vdjF5PL5/versions/AejMebCy/dynamictrees-fabric-1.21.1-1.7.2-BETA.jar"
+hash-format = "sha512"
+hash = "40d7ab674a98242dd37f8070d3d0f2befa4ef37d8b0e96d88abc100cf1668884b6618b2f3663998a36426899f0db908d2d2cc4d3a9643dd6b8836d60407c2ec4"
+
+[update]
+[update.modrinth]
+mod-id = "vdjF5PL5"
+version = "AejMebCy"

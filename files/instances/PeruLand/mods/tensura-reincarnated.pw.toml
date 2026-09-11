@@ -1,0 +1,13 @@
+name = "Tensura: Reincarnated"
+filename = "tensura-fabric-2.0.1.3.jar.disabled"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/Br0kXPwc/versions/YQ5c2eA3/tensura-fabric-2.0.1.3.jar"
+hash-format = "sha512"
+hash = "e27e92433edb76e95c26802f002dd7590d9c16a6f39e231fb9b55d8dd6d107b1ace5df962c08e24fc9ba218a7db183b3358b0dbe5baa950e27558e6c1f8e5710"
+
+[update]
+[update.modrinth]
+mod-id = "Br0kXPwc"
+version = "YQ5c2eA3"

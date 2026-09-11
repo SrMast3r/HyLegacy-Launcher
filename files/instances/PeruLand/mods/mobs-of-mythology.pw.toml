@@ -1,0 +1,13 @@
+name = "Mobs of Mythology"
+filename = "mobs_of_mythology-fabric-1.21.1-3.0.0.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/avrKhvsK/versions/Caz3htE2/mobs_of_mythology-fabric-1.21.1-3.0.0.jar"
+hash-format = "sha512"
+hash = "b11f34ecf42bd8baa02e2c1c19dfd8b06478a042b05af52e72ca6a708e0a68d5c01df07746e2d0c8c97e154a15bb8e203f83e53e14fe001145eedc1aaeda7e67"
+
+[update]
+[update.modrinth]
+mod-id = "avrKhvsK"
+version = "Caz3htE2"

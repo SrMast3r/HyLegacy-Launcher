@@ -1,0 +1,13 @@
+name = "Nyctophobia"
+filename = "nyctophobia-fabric-mc1.21.1-2.0.0.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/k5jeNqWg/versions/HfnagIJp/nyctophobia-fabric-mc1.21.1-2.0.0.jar"
+hash-format = "sha512"
+hash = "5e667400052c5ae02e45a59bdf162fd3ef130ab0b3ccfcc1c2080783e03b64ac48a7ba4e1e6654e6b32ea1848e28d71b6465abf52b76f7acb8787abdddf0dc5b"
+
+[update]
+[update.modrinth]
+mod-id = "k5jeNqWg"
+version = "HfnagIJp"

@@ -1,0 +1,13 @@
+name = "Common Storage Lib"
+filename = "common-storage-lib-fabric-1.21.1-0.0.10.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/RgLrNK7l/versions/ovOlr0a1/common-storage-lib-fabric-1.21.1-0.0.10.jar"
+hash-format = "sha512"
+hash = "4892578b8abac3ca1f2a5f4cd6eefbc0eb7f02b9d7846dc77783672167d3634a6d808dc25dfd1b6a404da9ecdb559f7ef92bd5c1d6e6aa25859c23cbe7bc5e4a"
+
+[update]
+[update.modrinth]
+mod-id = "RgLrNK7l"
+version = "ovOlr0a1"

@@ -38,4 +38,23 @@ $instance['lockout'] = array_merge($instance['lockout'], array(
         "port" => 25565
     )
 ));
+
+$instance['PeruLand'] = array_merge($instance['PeruLand'], array(
+    "loadder" => array(
+        "minecraft_version" => "1.21.1",
+        "loadder_type" => "fabric",
+        "loadder_version" => "0.19.3"
+    ),
+    "image" => "https://i.imgur.com/2yC06lB.png",
+    "verify" => false,
+    "ignored" => array(),
+    "packwiz_url" => "https://launcher.hylegacy.com/files/instances/PeruLand/pack.toml",
+    "whitelist" => array(),
+    "whitelistActive" => false,
+    "status" => array(
+        "nameServer" => "PeruLand",
+        "ip" => "CAMBIAR-A-TU-IP",
+        "port" => 25565
+    )
+));
 ?>

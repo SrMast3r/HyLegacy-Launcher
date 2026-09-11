@@ -1,0 +1,13 @@
+name = "Lost Relics"
+filename = "lostrelics-1.21-r1.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/xF60FXqO/versions/QwGXrecp/lostrelics-1.21-r1.jar"
+hash-format = "sha512"
+hash = "ade71a36cccc304ed5ab1a4b9487c3bdff8401e02b7fe40c36802e90f61d9773f25a9b488659fe858721d11b634a5e8f9048e2bfef36450952400d9b711b56b9"
+
+[update]
+[update.modrinth]
+mod-id = "xF60FXqO"
+version = "QwGXrecp"

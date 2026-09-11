@@ -1,0 +1,13 @@
+name = "Crate Delight"
+filename = "cratedelight-26.07.20-1.21-fabric.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/9rlXSyLg/versions/DZ9ekJtp/cratedelight-26.07.20-1.21-fabric.jar"
+hash-format = "sha512"
+hash = "d718984699c0f0845a0f55dd230694cf209fc42694ec77d27596e01a3be6f8af99ca97dc77f231083f83498c424f33cc3047e2d8ea57c9d6733b9fece3a273fb"
+
+[update]
+[update.modrinth]
+mod-id = "9rlXSyLg"
+version = "DZ9ekJtp"

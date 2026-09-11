@@ -1,0 +1,13 @@
+name = "Jupiter"
+filename = "jupiter-2.3.7-1.21.1-fabric.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/XbiLGMMU/versions/HzK8HDBb/jupiter-2.3.7-1.21.1-fabric.jar"
+hash-format = "sha512"
+hash = "66173fba7307c45c5093cfbf958dd1b908248182a302dfad5ea5c07dd574d6150baae38ad707e10b4aa16f07d5488dc213bd9e0dac6394fd1dfbcf608ec5b878"
+
+[update]
+[update.modrinth]
+mod-id = "XbiLGMMU"
+version = "HzK8HDBb"

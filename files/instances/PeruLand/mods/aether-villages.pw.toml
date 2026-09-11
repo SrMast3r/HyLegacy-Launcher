@@ -1,0 +1,13 @@
+name = "Aether Villages"
+filename = "AetherVillages-1.21.1-1.0.8-fabric.jar"
+side = "both"
+
+[download]
+url = "https://cdn.modrinth.com/data/3P2XnNW6/versions/AOZ2B4Ql/AetherVillages-1.21.1-1.0.8-fabric.jar"
+hash-format = "sha512"
+hash = "e0b28e5e3e9993a008f0ee4f99f478f9e59372a38f004eaec61d69ffcb553c22b2ef0c7ff843ed9bcddeb3922d3de7e6f55ac2b5b32d3789ab755453d6c9940a"
+
+[update]
+[update.modrinth]
+mod-id = "3P2XnNW6"
+version = "AOZ2B4Ql"
