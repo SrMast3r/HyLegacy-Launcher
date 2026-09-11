@@ -1,0 +1,18 @@
+/time set day
+/tick freeze
+/tp 0cd8ed2d-c980-4f27-bbc9-d162ff22a11c
+/tick unfreeze
+/tp 0cd8ed2d-c980-4f27-bbc9-d162ff22a11c
+/kill
+/kill 0cd8ed2d-c980-4f27-bbc9-d162ff22a11c
+/spark tps
+/spark profiler stop
+/tp 0 100 0
+/weather clear
+/gamerule doImmediateRespawn true
+/gamerule spawnRadius 1
+/spark tps
+/difficulty peaceful
+/execute in ad_astra:glacio run tp @s 27.14 63.00 39.72 -830.70 10.95
+/execute in ad_astra:mars run tp @s -51.63 107.44 127.18 -406.05 22.20
+/execute in minecraft:overworld run tp @s -75.57 103.00 80.03 379.21 20.85

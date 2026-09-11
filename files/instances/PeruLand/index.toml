@@ -1,6 +1,10 @@
 hash-format = "sha256"
 
 [[files]]
+file = "command_history.txt"
+hash = "820d72017780ff2306ffe50143023696e2595a74cd8015efba6fb70c0a42c556"
+
+[[files]]
 file = "config/CoroUtil/General.toml"
 hash = "6d46bdc090d4bb9bdfb660be4ca94075dc08e09d5fed84108eba92a422a23c49"
 
@@ -606,7 +610,7 @@ hash = "0b05a8814f09fead55b1901b7efab7d3ab87227ea3fc6b5e65a6197261832710"
 
 [[files]]
 file = "config/biomeswevegone/world_generation.json"
-hash = "4e644f8324221022aed71d39b3d56a6cd189d5bd3f67c4aa72b889fb208421da"
+hash = "6fb6ff3e2cb4d1c47431b2e9fb48090fd985e0b43777949ec0c346cda85e532d"
 
 [[files]]
 file = "config/cardinal-components-api.properties"
@@ -902,7 +906,7 @@ hash = "f437a2bff2337eecc996f8d0d17d348403eae070045dfbd37065c6fcb79ce6ce"
 
 [[files]]
 file = "config/fabric/indigo-renderer.properties"
-hash = "5757733233aa4e085c14b2a78435b196406b3d4df2f35c6559174286db1f14d5"
+hash = "b0c423b72509a8be24e721e747950b6f11a6ed0ae0a064c557d5c5874840e6e5"
 
 [[files]]
 file = "config/farmersdelight-client.json"
@@ -1022,11 +1026,11 @@ hash = "fef67d9f7d5ff146f21553ff65642e623c6314c8f147799efd1ebbd17f66209b"
 
 [[files]]
 file = "config/naturalist-client.properties"
-hash = "cf4b36197a682ba53e1624282a49f3df9328181c0fd5e59513456cc2514676bc"
+hash = "5ed8402a156888d3f81faec5accc06c65dd46916b667a2639eba681dc593c70a"
 
 [[files]]
 file = "config/naturalist-server.properties"
-hash = "3f7d3572be5aae508eaa9de537a0ce7acbb77c04b6b5e0e346928cfe84470fac"
+hash = "0bc7ba830139829782ac7c8c17b2ceae248f0f460f225d5e78d78a3189631b55"
 
 [[files]]
 file = "config/nyctophobia_config.json5"
@@ -1102,7 +1106,7 @@ hash = "a59667baa54738c1b294393a9b3652bcf7d392cdb8cba1c08a8006885b18e919"
 
 [[files]]
 file = "config/roughlyenoughitems/config.json5"
-hash = "bdc6a8897a2130ee7c76f609adcc2d45a46352d21b34ec1ff1a676db0c00ca61"
+hash = "c9088c2bd0da8694c0dfd2e8c0fe45d3fef876e5e4af7d59f017ca2c1fd702ce"
 
 [[files]]
 file = "config/roughlyenoughitems/favorites.json5"
@@ -1279,6 +1283,58 @@ hash = "db4b324570e46151af29d479bcd361ffc4d4a3a5ebb58d195d7a647e302d7d73"
 [[files]]
 file = "config/wilderwild/worldgen.json5"
 hash = "b150093805708e127ab082cff2221849f6f8279519652f70d0fa3bc9fa626b0d"
+
+[[files]]
+file = "config/xaero/lib/client.cfg"
+hash = "43ed9dbfa5b4d6f0f3d2e8c2ced17ad298164b22c68ff11d415257a39b074336"
+
+[[files]]
+file = "config/xaero/lib/common.cfg"
+hash = "98f698d96a6d21d830a455b4ad045b70516fa63c298021742d8499e7f0366cd2"
+
+[[files]]
+file = "config/xaero/lib/profiles/default.cfg"
+hash = "34ae854b17d896d7cb853bdc28c27231a3947e91cb9f0991f372846ee3c2a907"
+
+[[files]]
+file = "config/xaero/lib/server_profiles/default.cfg"
+hash = "d438aea41ca41e93697e059f523686935c0add482f6abe96b532bbf10c6ed80a"
+
+[[files]]
+file = "config/xaero/minimap/client.cfg"
+hash = "c0915eff5d1a7905cd1038d646eb9086fd1a29e2f637d53535e4da161de17b9f"
+
+[[files]]
+file = "config/xaero/minimap/common.cfg"
+hash = "2b49df024c03a369c62a303c72755e7fedeb4f4653ff53a12fd37bd83ccd4ed0"
+
+[[files]]
+file = "config/xaero/minimap/profiles/default.cfg"
+hash = "53b57c6a7bc117d6c2bc7a1fa8f1e5cbc963946d10f0de22fa55d2cb0929285e"
+
+[[files]]
+file = "config/xaero/minimap/server_profiles/default.cfg"
+hash = "d438aea41ca41e93697e059f523686935c0add482f6abe96b532bbf10c6ed80a"
+
+[[files]]
+file = "config/xaero/world-map/client.cfg"
+hash = "d0f079a8df083f6f60a0e0c1316a25fc841755a91bdcb2f86c66ead8e7d4d13d"
+
+[[files]]
+file = "config/xaero/world-map/common.cfg"
+hash = "0c229eb0daf85bd09af51f21eeeb99497a3bd50a825d5ab1ca695fb21bf6cf9d"
+
+[[files]]
+file = "config/xaero/world-map/profiles/default.cfg"
+hash = "5422abf9c83fedef6509144293fad20f588d4bb6ce0cf1af78cbcd2bcd0d2ccf"
+
+[[files]]
+file = "config/xaero/world-map/server_profiles/default.cfg"
+hash = "d438aea41ca41e93697e059f523686935c0add482f6abe96b532bbf10c6ed80a"
+
+[[files]]
+file = "config/xaeropatreon.txt"
+hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 [[files]]
 file = "config/yacl.json5"
@@ -1856,6 +1912,16 @@ hash = "41fa2e2fabc81ff476dbe940ab94818c25cb5553c81d8f3441396a80bfdbdb41"
 metafile = true
 
 [[files]]
+file = "mods/xaeros-minimap.pw.toml"
+hash = "a00158a640285545d232f5f9e82e5102ea4a9246f7897b4ff9f3f7544d5f288a"
+metafile = true
+
+[[files]]
+file = "mods/xaeros-world-map.pw.toml"
+hash = "fb245abdce152a31eae431d6d7340c69ad899ca35b6f71e12d840cc15e1e861a"
+metafile = true
+
+[[files]]
 file = "mods/yacl.pw.toml"
 hash = "af20070dd9497817a83162c17b181a0a44f7213ea302d059a81c5aed02d0c877"
 metafile = true
@@ -1905,4 +1971,8 @@ metafile = true
 
 [[files]]
 file = "servers.dat"
+hash = "b7ec5b3279c574746b97740b80ea564ea6ddb8e181e119c69accb5a335a1bb72"
+
+[[files]]
+file = "servers.dat_old"
 hash = "b7ec5b3279c574746b97740b80ea564ea6ddb8e181e119c69accb5a335a1bb72"
