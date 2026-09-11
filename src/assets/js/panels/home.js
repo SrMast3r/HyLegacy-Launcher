@@ -5,7 +5,6 @@
 import config from '../utils/config.js';
 import { database, logger, changePanel, appdata, setStatus, pkg, popup, getServerPlayerCount, getSkinHeadUrl } from '../utils.js';
 import { installPackwiz } from '../utils/packwiz.js';
-import { fetchEphemeralMods, writeEphemeralModsSync, deleteEphemeralMods } from '../utils/ephemeralMods.js';
 
 const { Launch } = require('minecraft-java-core');
 const { ipcRenderer } = require('electron');
@@ -506,7 +505,6 @@ class Home {
         text.textContent = 'Preparando…';
 
         const instancePath = `${opt.path}/instances/${opt.instance}`;
-        let ephemeralWrittenPaths = null;
 
         // === packwiz: instalar/actualizar mods desde Modrinth/CurseForge (CDN),
         //     no desde nuestro servidor, antes de que minecraft-java-core arranque ===
@@ -532,37 +530,6 @@ class Home {
                 box.style.display = 'none';
                 new popup().openPopup({
                     title: 'Error al actualizar mods',
-                    content: err?.message || String(err),
-                    color: 'red',
-                    options: true
-                });
-                return;
-            }
-            text.textContent = 'Preparando…';
-        }
-
-        // === Mods protegidos: se piden, descifran y escriben acá (antes de
-        //     que arranque la JVM). Se probó escribir justo en el instante
-        //     sincrónico previo al spawn (mínima exposición en disco), pero
-        //     eso no le daba tiempo a Windows Defender de terminar de
-        //     escanear el archivo recién creado antes de que Fabric/Mixin
-        //     intentara abrirlo — producía "resource ... was invalid or
-        //     could not be read" de forma intermitente en máquinas reales.
-        //     Prioridad: que el juego cargue siempre, no la ventana mínima.
-        if (options.ephemeral_mods?.length) {
-            text.textContent = 'Preparando contenido protegido…';
-            try {
-                const apiBase = pkg.user ? `${pkg.url}/${pkg.user}` : pkg.url;
-                const files = await fetchEphemeralMods({ instance: options.name, apiBase });
-                ephemeralWrittenPaths = writeEphemeralModsSync(instancePath, files);
-            } catch (err) {
-                console.error('[Home] ephemeral mods error', err);
-                writeLaunchLog(logBase, `ERROR ephemeral mods: ${err?.message || err}`);
-                btn.disabled = false;
-                btn.style.display = 'inline-flex';
-                box.style.display = 'none';
-                new popup().openPopup({
-                    title: 'Error al preparar contenido protegido',
                     content: err?.message || String(err),
                     color: 'red',
                     options: true
@@ -609,7 +576,6 @@ class Home {
         });
 
         let hideTimer = null;
-        let ephemeralCleanupTimer = null;
 
         launch.on('data', async (msg) => {
             bar.style.display = 'none';
@@ -631,21 +597,6 @@ class Home {
                     hideTimer = null;
                     ipcRenderer.send('main-window-hide');
                 }, 8000);
-            }
-            if (ephemeralWrittenPaths && !ephemeralCleanupTimer) {
-                // Da tiempo a que Fabric ya haya leído el mod protegido de disco
-                // antes de borrarlo — el proceso ya está arrancando en este punto.
-                // OJO: no limpia ephemeralWrittenPaths acá. Si Fabric/Knot sigue
-                // con el .jar abierto (normal en Windows durante toda la sesión),
-                // este intento falla y reintenta unas veces, pero la referencia
-                // se mantiene — restoreUI() (en 'close'/'error') vuelve a intentar
-                // cuando la JVM ya soltó el archivo. deleteEphemeralMods es
-                // idempotente (chequea fs.existsSync), así que llamarla más de
-                // una vez es seguro.
-                ephemeralCleanupTimer = setTimeout(() => {
-                    ephemeralCleanupTimer = null;
-                    deleteEphemeralMods(ephemeralWrittenPaths);
-                }, 5000);
             }
             new logger('Minecraft', '#36b030');
             ipcRenderer.send('main-window-progress-load');
@@ -669,14 +620,6 @@ class Home {
             if (hideTimer) {
                 clearTimeout(hideTimer);
                 hideTimer = null;
-            }
-            if (ephemeralCleanupTimer) {
-                clearTimeout(ephemeralCleanupTimer);
-                ephemeralCleanupTimer = null;
-            }
-            if (ephemeralWrittenPaths) {
-                deleteEphemeralMods(ephemeralWrittenPaths);
-                ephemeralWrittenPaths = null;
             }
             // Si el launcher se ocultó al arrancar el juego (closeLauncher:
             // "close-launcher"), tiene que volver a mostrarse SIEMPRE que el

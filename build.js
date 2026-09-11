@@ -45,9 +45,6 @@ class Index {
                 if (process.env.GH_UPDATE_TOKEN) {
                     code = code.replace('GH_UPDATE_TOKEN_PLACEHOLDER', process.env.GH_UPDATE_TOKEN);
                 }
-                if (process.env.EPHEMERAL_CLIENT_KEY) {
-                    code = code.replace('EPHEMERAL_CLIENT_KEY_PLACEHOLDER', process.env.EPHEMERAL_CLIENT_KEY);
-                }
                 if (this.obf) {
                     await new Promise((resolve) => {
                         console.log(`Obfuscate ${path}`);
