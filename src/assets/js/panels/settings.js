@@ -335,12 +335,17 @@ class Settings {
         });
 
         // Comportamiento al iniciar
+        // "close-launcher" (ocultar la ventana al arrancar el juego) se quitó:
+        // daba lugar a que la ventana se quedara oculta para siempre si algo
+        // fallaba a mitad de partida, sin forma de recuperarla salvo matar el
+        // proceso desde el Administrador de tareas. Cualquier config vieja que
+        // todavía tenga ese valor guardado cae en "close-none" (el launcher
+        // simplemente nunca se oculta).
         const closeBox = document.querySelector('.close-box');
-        const closeMode = cfg?.launcher_config?.closeLauncher || 'close-launcher';
+        const closeMode = cfg?.launcher_config?.closeLauncher === 'close-all' ? 'close-all' : 'close-none';
 
-        if (closeMode === 'close-launcher') document.querySelector('.close-launcher').classList.add('active-close');
-        else if (closeMode === 'close-all') document.querySelector('.close-all').classList.add('active-close');
-        else if (closeMode === 'close-none')document.querySelector('.close-none').classList.add('active-close');
+        if (closeMode === 'close-all') document.querySelector('.close-all').classList.add('active-close');
+        else document.querySelector('.close-none').classList.add('active-close');
 
         closeBox.addEventListener('click', async e => {
             if (!e.target.classList.contains('close-btn')) return;
@@ -348,10 +353,7 @@ class Settings {
 
             const cfg4 = await this.db.readData('configClient');
 
-            if (e.target.classList.contains('close-launcher')) {
-                e.target.classList.add('active-close');
-                cfg4.launcher_config.closeLauncher = 'close-launcher';
-            } else if (e.target.classList.contains('close-all')) {
+            if (e.target.classList.contains('close-all')) {
                 e.target.classList.add('active-close');
                 cfg4.launcher_config.closeLauncher = 'close-all';
             } else if (e.target.classList.contains('close-none')) {

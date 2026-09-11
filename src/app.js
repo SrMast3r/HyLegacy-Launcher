@@ -73,7 +73,6 @@ ipcMain.on('main-window-maximize', () => {
     }
 })
 
-ipcMain.on('main-window-hide', () => MainWindow.getWindow().hide())
 ipcMain.on('main-window-show', () => MainWindow.getWindow().show())
 
 ipcMain.handle('Microsoft-window', async (_, client_id) => {

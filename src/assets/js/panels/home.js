@@ -575,29 +575,10 @@ class Home {
             text.innerHTML = `Aplicando patch...`;
         });
 
-        let hideTimer = null;
-
         launch.on('data', async (msg) => {
             bar.style.display = 'none';
             text.innerHTML = `Iniciando juego...`;
-            writeLaunchLog(logBase, 'Proceso del juego arrancado, esperando confirmación antes de ocultar el launcher.');
-            if (cfg?.launcher_config?.closeLauncher === 'close-launcher' && !hideTimer) {
-                // 'data' se dispara muchas veces durante la partida (cada línea de
-                // log del juego) — sin el "&& !hideTimer" de arriba, cada disparo
-                // armaba un temporizador NUEVO sin cancelar el anterior, dejando
-                // temporizadores huérfanos corriendo de fondo. Cuando el juego
-                // cerraba y restoreUI() volvía a mostrar la ventana, uno de esos
-                // huérfanos disparaba después y la ocultaba de nuevo — sin ningún
-                // 'close' pendiente que la volviera a mostrar, quedaba oculta para
-                // siempre (el único arreglo era matar el proceso a mano).
-                //
-                // Si el juego revienta al instante (crash silencioso), 'close'/'error' cancelan
-                // este timer antes de que dispare — así el launcher no se queda oculto sin avisar.
-                hideTimer = setTimeout(() => {
-                    hideTimer = null;
-                    ipcRenderer.send('main-window-hide');
-                }, 8000);
-            }
+            writeLaunchLog(logBase, 'Proceso del juego arrancado.');
             new logger('Minecraft', '#36b030');
             ipcRenderer.send('main-window-progress-load');
 
@@ -617,16 +598,6 @@ class Home {
         });
 
         const restoreUI = () => {
-            if (hideTimer) {
-                clearTimeout(hideTimer);
-                hideTimer = null;
-            }
-            // Si el launcher se ocultó al arrancar el juego (closeLauncher:
-            // "close-launcher"), tiene que volver a mostrarse SIEMPRE que el
-            // juego termine — antes solo pasaba en el camino de error, así
-            // que un cierre normal dejaba la ventana oculta para siempre (el
-            // proceso seguía vivo, pero sin ventana visible ni forma de
-            // recuperarla salvo matarlo desde el Administrador de tareas).
             ipcRenderer.send('main-window-show');
             ipcRenderer.send('main-window-progress-reset');
             box.style.display = 'none';
