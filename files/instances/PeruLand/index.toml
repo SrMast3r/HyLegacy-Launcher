@@ -1428,6 +1428,11 @@ hash = "6d4de3bf124c98a61c022477e07c8386940d4804001f5f71b322c9b1b74cb5c2"
 metafile = true
 
 [[files]]
+file = "mods/carry-on.pw.toml"
+hash = "8b88002d02470c59f0a796aaaab877b16cd5d52b64a20c088c462354737189eb"
+metafile = true
+
+[[files]]
 file = "mods/chat-heads.pw.toml"
 hash = "5d0697933c7714e41fc1fafaaff08ddf0ad58c9c5426fb5fdb5688779582d84f"
 metafile = true
