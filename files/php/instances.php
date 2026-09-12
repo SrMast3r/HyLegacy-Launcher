@@ -44,7 +44,7 @@ $instance['PeruLand'] = array_merge($instance['PeruLand'], array(
         "loadder_type" => "fabric",
         "loadder_version" => "0.19.3"
     ),
-    "image" => "https://i.imgur.com/2yC06lB.png",
+    "image" => "https://i.imgur.com/djZ5pQS.jpeg",
     "verify" => false,
     "ignored" => array(),
     "packwiz_url" => "https://launcher.hylegacy.com/files/instances/PeruLand/pack.toml",

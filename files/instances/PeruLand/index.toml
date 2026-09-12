@@ -1937,10 +1937,6 @@ hash = "57ae99f727e3fcd7a1abbc624bf14cafa5f092f2082dcf3edc609289efb25c15"
 metafile = true
 
 [[files]]
-file = "options.txt"
-hash = "e0d84fc4a5f3d25a42c9d779d1c6bb260793eb47b80276956559dda63fb9736f"
-
-[[files]]
 file = "patchouli_data.json"
 hash = "0d6f8bff5d59d58e2ddda36b742394251afe308cb8cf96fac6c6c06144e28a15"
 
@@ -1968,11 +1964,3 @@ metafile = true
 file = "resourcepacks/shaded-font.pw.toml"
 hash = "87be07a0d75ebb3982a6fc6cd56577a62f16f0d5604a4d7e8de50af8f62beeb6"
 metafile = true
-
-[[files]]
-file = "servers.dat"
-hash = "b7ec5b3279c574746b97740b80ea564ea6ddb8e181e119c69accb5a335a1bb72"
-
-[[files]]
-file = "servers.dat_old"
-hash = "b7ec5b3279c574746b97740b80ea564ea6ddb8e181e119c69accb5a335a1bb72"
