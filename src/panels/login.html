@@ -35,8 +35,8 @@
             </div>
 
             <div class="login-options">
-                <button class="cancel" type="button" onclick="showView('.login-offline')">Modo Offline</button>
-                <button class="cancel" type="button" onclick="showView('.login-AZauth')">AZauth</button>
+                <button class="cancel" type="button" data-view=".login-offline">Modo Offline (No Premium)</button>
+                <button class="cancel login-azauth-option" type="button" data-view=".login-AZauth" style="display:none">AZauth</button>
             </div>
         </section>
 
@@ -47,7 +47,7 @@
             <div class="input-login">
                 <input class="email email-offline" type="text" placeholder="Apodo (mín. 3 letras)" />
                 <button class="connect connect-offline" type="button">Entrar</button>
-                <button class="cancel" type="button" onclick="showView('.login-home')">Volver</button>
+                <button class="cancel" type="button" data-view=".login-home">Volver</button>
             </div>
         </section>
 
@@ -59,7 +59,7 @@
                 <input class="email email-AZauth" type="email" placeholder="Correo" />
                 <input class="password password-AZauth" type="password" placeholder="Contraseña" />
                 <button class="connect connect-AZauth" type="button">Conectar</button>
-                <button class="cancel" type="button" onclick="showView('.login-home')">Volver</button>
+                <button class="cancel" type="button" data-view=".login-home">Volver</button>
             </div>
         </section>
 
@@ -77,16 +77,5 @@
     </div>
 </main>
 
-<script type="module">
-    import Login from './assets/js/login.js';
-    window.showView = (sel) => {
-        document.querySelectorAll('.login-tabs').forEach(el =>
-            el.classList.toggle('is-active', el.matches(sel))
-        );
-    };
-    const login = new Login();
-    const config = { online: true, client_id: 'TU_CLIENT_ID_MICROSOFT' };
-    login.init(config);
-</script>
 </body>
 </html>

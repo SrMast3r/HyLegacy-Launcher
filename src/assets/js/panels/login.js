@@ -4,7 +4,7 @@
  * Basado en Luuxis, adaptado a estilo Splash
  */
 
-const { AZauth, Mojang } = require('minecraft-java-core');
+const { AZauth } = require('minecraft-java-core');
 const { ipcRenderer } = require('electron');
 
 import {
@@ -13,6 +13,7 @@ import {
     changePanel,
     accountSelect,
     addAccount,
+    offlineAccount,
     config,
     setStatus
 } from '../utils.js';
@@ -20,7 +21,19 @@ import {
 /* ===================== Utilidades ===================== */
 const $$ = (sel, root=document) => root.querySelector(sel);
 const on = (el, ev, fn, opts) => el && el.addEventListener(ev, fn, opts);
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Nick válido de Minecraft: 3-16 caracteres, letras, números o _
+const OFFLINE_NAME_RE = /^[A-Za-z0-9_]{3,16}$/;
+
+const MS_ERRORS = {
+    NO_MINECRAFT_ACCOUNT: 'Esta cuenta de Microsoft no tiene Minecraft Java. Usa otra cuenta o el Modo Offline.',
+    NO_MINECRAFT_ENTITLEMENTS: 'Esta cuenta de Microsoft no tiene Minecraft Java. Usa otra cuenta o el Modo Offline.',
+};
+const errorText = (err) => {
+    const raw = err?.error ?? err?.message ?? err;
+    if (typeof raw === 'string') return MS_ERRORS[raw] || raw;
+    try { return JSON.stringify(raw); } catch { return String(raw); }
+};
 
 /* Forzar no-scroll en motores tercos */
 (function killScrollbars(){
@@ -40,7 +53,6 @@ const showView = (sel) => {
         el.classList.toggle('is-active', s === sel);
     });
 };
-window.showView = showView; // por si llamas desde HTML
 
 export default class Login {
     static id = "login";
@@ -48,6 +60,10 @@ export default class Login {
     async init(configIn) {
         this.config = configIn;
         this.db = new database();
+        this.pop = new popup();
+        this.busy = false;
+        this.isAZauth = typeof this.config.online === 'string'
+            && /^(http|https):\/\/[^ "]+$/.test(this.config.online);
 
         // Tema (oscuro/claro/auto) como el splash
         try {
@@ -67,127 +83,142 @@ export default class Login {
             }
         });
 
+        // Botones de navegación entre vistas. La CSP (script-src 'self') bloquea
+        // los onclick="" escritos en el HTML, así que se conectan aquí.
+        document.querySelectorAll('.login [data-view]').forEach(btn => {
+            on(btn, 'click', () => showView(btn.dataset.view));
+        });
+
         // Botón Configurar → settings
         const cancelHome = $$('.cancel-home');
         on(cancelHome, 'click', () => {
             cancelHome.style.display = 'none';
             changePanel('settings');
-        }, { once: true });
+        });
 
-        // Ruteo inicial según tu config
-        if (typeof this.config.online === 'boolean') {
-            this.config.online ? this.getMicrosoft() : this.getCrack();
-        } else if (typeof this.config.online === 'string') {
-            if (this.config.online.match(/^(http|https):\/\/[^ "]+$/)) this.getAZauth();
-            else this.getMicrosoft(); // fallback
-        } else {
-            this.getMicrosoft(); // default
+        // Premium y no premium siempre disponibles; AZauth solo si `online` es una URL
+        this.getMicrosoft();
+        this.getCrack();
+        if (this.isAZauth) {
+            const opt = $$('.login-azauth-option');
+            if (opt) opt.style.display = '';
+            this.getAZauth();
         }
 
-        // Asegura animación inicial
-        requestAnimationFrame(() => {
-            document.querySelectorAll('.login-tabs').forEach(el => {
-                if (getComputedStyle(el).display !== 'none' || el.classList.contains('is-active')) {
-                    el.classList.add('is-active');
-                }
-            });
-        });
-    }
-
-    /* ===================== Microsoft ===================== */
-    async getMicrosoft() {
-        const pop = new popup();
         showView('.login-home');
-
-        const btn = $$('.connect-home');
-        on(btn, 'click', () => {
-            pop.openPopup({ title: 'Conectando con Microsoft', content: 'Por favor, espera…', color: 'var(--color)' });
-
-            ipcRenderer.invoke('Microsoft-window', this.config.client_id)
-                .then(async account_connect => {
-                    if (account_connect === 'cancel' || !account_connect) { pop.closePopup(); return; }
-                    if (account_connect.error) {
-                        pop.openPopup({ title: 'Error', content: account_connect.error, options: true });
-                        return;
-                    }
-                    await this.saveData(account_connect);
-                    pop.closePopup();
-                })
-                .catch(err => {
-                    pop.openPopup({ title: 'Error', content: String(err), options: true });
-                });
-        }, { once: true });
     }
 
-    /* ===================== Offline ===================== */
-    async getCrack() {
-        const pop = new popup();
-        showView('.login-offline');
+    /**
+     * Ejecuta un intento de login: ignora clics mientras otro está en curso
+     * y muestra cualquier error en vez de dejar el botón colgado.
+     */
+    async attempt(fn) {
+        if (this.busy) return;
+        this.busy = true;
+        try {
+            await fn();
+        } catch (err) {
+            console.error('[Login]', err);
+            this.pop.openPopup({ title: 'Error', content: errorText(err), options: true });
+        } finally {
+            this.busy = false;
+        }
+    }
 
+    /* ===================== Microsoft (premium) ===================== */
+    getMicrosoft() {
+        on($$('.connect-home'), 'click', () => this.attempt(async () => {
+            this.pop.openPopup({ title: 'Conectando con Microsoft', content: 'Por favor, espera…', color: 'var(--color)' });
+
+            const account = await ipcRenderer.invoke('Microsoft-window', this.config.client_id);
+            if (!account || account === 'cancel') return this.pop.closePopup();
+            if (account.error) {
+                return this.pop.openPopup({ title: 'Error', content: errorText(account), options: true });
+            }
+
+            await this.saveData(account);
+            this.pop.closePopup();
+        }));
+    }
+
+    /* ===================== Offline (no premium) ===================== */
+    getCrack() {
         const nickInput = $$('.email-offline');
-        const btn = $$('.connect-offline');
 
-        on(btn, 'click', async () => {
+        const submit = () => this.attempt(async () => {
             const nick = (nickInput.value || '').trim();
-            if (nick.length < 3) return pop.openPopup({ title: 'Error', content: 'El apodo debe tener al menos 3 caracteres.', options: true });
-            if (/\s/.test(nick)) return pop.openPopup({ title: 'Error', content: 'El apodo no puede contener espacios.', options: true });
+            if (!OFFLINE_NAME_RE.test(nick)) {
+                return this.pop.openPopup({
+                    title: 'Error',
+                    content: 'El apodo debe tener entre 3 y 16 caracteres y solo puede usar letras, números o _.',
+                    options: true
+                });
+            }
 
-            const res = await Mojang.login(nick);
-            if (res.error) return pop.openPopup({ title: 'Error', content: res.message, options: true });
+            // Si ese nick offline ya existe, se selecciona en vez de duplicarlo
+            const accounts = await this.db.readAllData('accounts') || [];
+            const existing = accounts.find(a => a.meta?.online === false
+                && a.name?.toLowerCase() === nick.toLowerCase());
+            if (existing) return this.selectExisting(existing);
 
-            await this.saveData(res);
-            pop.closePopup();
-        }, { once: true });
+            await this.saveData(offlineAccount(nick));
+            nickInput.value = '';
+        });
+
+        on($$('.connect-offline'), 'click', submit);
+        on(nickInput, 'keydown', (e) => { if (e.key === 'Enter') submit(); });
     }
 
     /* ===================== AZauth (con 2FA) ===================== */
-    async getAZauth() {
-        const Pop = new popup();
+    getAZauth() {
         const client = new AZauth(this.config.online);
-
-        showView('.login-AZauth');
 
         const email = $$('.email-AZauth');
         const pass  = $$('.password-AZauth');
         const code  = $$('.A2F-AZauth');
 
-        const btnLogin  = $$('.connect-AZauth');
-        const btn2FA    = $$('.connect-AZauth-A2F');
-        const btnCancel = $$('.cancel-AZauth-A2F');
+        on($$('.cancel-AZauth-A2F'), 'click', () => showView('.login-AZauth'));
 
-        on(btnLogin, 'click', async () => {
-            Pop.openPopup({ title: 'Conectando…', content: 'Por favor, espera…', color: 'var(--color)' });
-
+        on($$('.connect-AZauth'), 'click', () => this.attempt(async () => {
             if (!email.value || !pass.value) {
-                Pop.openPopup({ title: 'Error', content: 'Completa todos los campos.', options: true });
-                return;
+                return this.pop.openPopup({ title: 'Error', content: 'Completa todos los campos.', options: true });
             }
+            this.pop.openPopup({ title: 'Conectando…', content: 'Por favor, espera…', color: 'var(--color)' });
 
-            let r = await client.login(email.value, pass.value);
-            if (r.error) return Pop.openPopup({ title: 'Error', content: r.message, options: true });
+            const r = await client.login(email.value, pass.value);
+            if (r.error) return this.pop.openPopup({ title: 'Error', content: r.message, options: true });
 
             if (r.A2F) {
                 showView('.login-AZauth-A2F');
-                Pop.closePopup();
-
-                on(btnCancel, 'click', () => showView('.login-AZauth'), { once: true });
-
-                on(btn2FA, 'click', async () => {
-                    Pop.openPopup({ title: 'Conectando…', content: 'Por favor, espera…', color: 'var(--color)' });
-                    if (!code.value) return Pop.openPopup({ title: 'Error', content: 'Ingresa el código de seguridad.', options: true });
-
-                    r = await client.login(email.value, pass.value, code.value);
-                    if (r.error) return Pop.openPopup({ title: 'Error', content: r.message, options: true });
-
-                    await this.saveData(r);
-                    Pop.closePopup();
-                }, { once: true });
-
-            } else {
-                await this.saveData(r);
-                Pop.closePopup();
+                return this.pop.closePopup();
             }
-        }, { once: true });
+            await this.saveData(r);
+            this.pop.closePopup();
+        }));
+
+        on($$('.connect-AZauth-A2F'), 'click', () => this.attempt(async () => {
+            if (!code.value) {
+                return this.pop.openPopup({ title: 'Error', content: 'Ingresa el código de seguridad.', options: true });
+            }
+            this.pop.openPopup({ title: 'Conectando…', content: 'Por favor, espera…', color: 'var(--color)' });
+
+            const r = await client.login(email.value, pass.value, code.value);
+            if (r.error) return this.pop.openPopup({ title: 'Error', content: r.message, options: true });
+
+            await this.saveData(r);
+            this.pop.closePopup();
+        }));
+    }
+
+    /* ===================== Seleccionar cuenta ya guardada ===================== */
+    async selectExisting(account) {
+        const configClient = await this.db.readData('configClient');
+        configClient.account_selected = account.ID;
+        await this.db.updateData('configClient', configClient);
+        await accountSelect(account);
+        this.pop.closePopup();
+        showView('.login-home');
+        changePanel('home');
     }
 
     /* ===================== Guardar cuenta & navegar ===================== */
@@ -216,6 +247,7 @@ export default class Login {
         await this.db.updateData('configClient', configClient);
         await addAccount(account);
         await accountSelect(account);
+        showView('.login-home');
         changePanel('home');
     }
 }

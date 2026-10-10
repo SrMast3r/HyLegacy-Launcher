@@ -8,7 +8,7 @@ import Home from './panels/home.js';
 import Settings from './panels/settings.js';
 
 // importar módulos
-import { logger, config, changePanel, database, popup, setBackground, accountSelect, addAccount, pkg } from './utils.js';
+import { logger, config, changePanel, database, popup, setBackground, accountSelect, addAccount, offlineAccount, pkg } from './utils.js';
 const { AZauth, Microsoft, Mojang } = require('minecraft-java-core');
 
 // librerías
@@ -151,6 +151,15 @@ class Launcher {
 
                     let refresh_accounts = await new Microsoft(this.config.client_id).refresh(account);
 
+                    // Sin internet (o Microsoft caído) no es motivo para borrar la
+                    // cuenta: se conserva tal cual y se renueva en el próximo inicio.
+                    if (refresh_accounts.error && refresh_accounts.errorType === 'network') {
+                        console.warn(`[Cuenta] ${account.name}: no se pudo renovar (red), se conserva`);
+                        await addAccount(account)
+                        if (account_ID == account_selected) accountSelect(account)
+                        continue;
+                    }
+
                     if (refresh_accounts.error) {
                         await this.db.deleteData('accounts', account_ID)
                         if (account_ID == account_selected) {
@@ -198,11 +207,12 @@ class Launcher {
                         background: false
                     });
                     if (account.meta.online == false) {
-                        let refresh_accounts = await Mojang.login(account.name);
+                        // UUID fijo por nick (Mojang.login lo generaba al azar)
+                        let refresh_accounts = offlineAccount(account.name);
 
                         refresh_accounts.ID = account_ID
+                        await this.db.updateData('accounts', refresh_accounts, account_ID)
                         await addAccount(refresh_accounts)
-                        this.db.updateData('accounts', refresh_accounts, account_ID)
                         if (account_ID == account_selected) accountSelect(refresh_accounts)
                         continue;
                     }
@@ -237,20 +247,17 @@ class Launcher {
             configClient = await this.db.readData('configClient')
             account_selected = configClient ? configClient.account_selected : null
 
-            if (!account_selected) {
-                let uuid = accounts[0].ID
-                if (uuid) {
-                    configClient.account_selected = uuid
-                    await this.db.updateData('configClient', configClient)
-                    accountSelect(uuid)
-                }
-            }
-
-            if (!accounts.length) {
-                config.account_selected = null
-                await this.db.updateData('configClient', config);
+            if (!accounts?.length) {
+                configClient.account_selected = null
+                await this.db.updateData('configClient', configClient);
                 popupRefresh.closePopup()
                 return changePanel("login");
+            }
+
+            if (!account_selected || !accounts.some(a => a.ID == account_selected)) {
+                configClient.account_selected = accounts[0].ID
+                await this.db.updateData('configClient', configClient)
+                accountSelect(accounts[0])
             }
 
             popupRefresh.closePopup()

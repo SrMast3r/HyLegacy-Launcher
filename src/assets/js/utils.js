@@ -8,6 +8,7 @@
 const { ipcRenderer } = require('electron');
 const { Status } = require('minecraft-java-core');
 const fs = require('fs');
+const crypto = require('crypto');
 const pkg = require('../package.json');
 
 // Imports ESM del proyecto (ajusta las rutas si difieren)
@@ -76,6 +77,27 @@ async function appdata() {
 }
 
 /* =================== Cuentas =================== */
+/**
+ * Cuenta offline (no premium) con UUID fijo: el mismo que calcula un servidor
+ * en modo offline (UUID v3 de "OfflinePlayer:<nick>"). Mojang.login() de
+ * minecraft-java-core genera uno al azar en cada inicio, y eso cambiaba la
+ * identidad del jugador (inventario, permisos...) cada vez que abría el launcher.
+ */
+function offlineAccount(name) {
+    const hash = crypto.createHash('md5').update(`OfflinePlayer:${name}`).digest();
+    hash[6] = (hash[6] & 0x0f) | 0x30; // versión 3
+    hash[8] = (hash[8] & 0x3f) | 0x80; // variante RFC 4122
+    const uuid = hash.toString('hex');
+    return {
+        access_token: uuid,
+        client_token: uuid,
+        uuid,
+        name,
+        user_properties: '{}',
+        meta: { online: false, type: 'Mojang' }
+    };
+}
+
 async function addAccount(data) {
     let skin = false;
     if (data?.profile?.skins?.[0]?.base64) {
@@ -184,6 +206,7 @@ export {
     skin2D,
     addAccount,
     accountSelect,
+    offlineAccount,
     slider as Slider,
     pkg,
     setStatus,
