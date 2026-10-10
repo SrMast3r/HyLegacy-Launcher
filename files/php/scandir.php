@@ -14,6 +14,8 @@ function requestScheme() {
 function isPackwizFile($filename) {
     if ($filename === 'pack.toml' || $filename === 'index.toml' || $filename === 'packwiz.json') return true;
     if (substr($filename, -8) === '.pw.toml') return true;
+    // El .mrpack lo instala el launcher por su cuenta (ver php/mrpack.php)
+    if (strtolower(substr($filename, -7)) === '.mrpack') return true;
     return false;
 }
 

@@ -1,6 +1,7 @@
 <?php
 header("Content-Type: application/json; charset=UTF-8");
 include 'php/scandir.php';
+include 'php/mrpack.php';
 
 $instance_param = $_GET['instance'] ?? 'null';
 
@@ -30,6 +31,11 @@ if ($instance_param == 'null') {
     foreach ($instances_list as $value) {
         $url = "$scheme://$_SERVER[HTTP_HOST]$_SERVER[PHP_SELF]?instance=$value";
         $instance[$value] = array("name" => $value, "url" => $url);
+
+        // ¿La instancia es un .mrpack de Modrinth? (ver php/mrpack.php)
+        $packBase = "$scheme://$_SERVER[HTTP_HOST]" . dirname($_SERVER['PHP_SELF']) . "/instances/" . rawurlencode($value);
+        $mrpack = mrpackInstanceData("instances/$value", $packBase);
+        if ($mrpack) $instance[$value] = array_merge($instance[$value], $mrpack);
     }
     
     include 'php/instances.php';
