@@ -1,0 +1,30 @@
+chat:
+  #If true, experience gain messages will appear above the hotbar.
+  #Default value: true
+  show_exp_above_hotbar: true
+  #If true, you will see a chat message when you level up.
+  #Default value: true
+  show_your_level_up_chat_messages: true
+  #If true, you will see a toast message when you level up.
+  #Default value: true
+  show_your_level_up_toast_messages: true
+  #If true, you will see a chat message when other players level up.
+  #Default value: true
+  show_players_level_up_chat_messages: true
+  #If true, a toast message will appear when you unlock a job restriction.
+  #Default value: true
+  show_restriction_unlock_toast_message: true
+  #If true, a toast message will appear when you unlock a powerup.
+  #Default value: true
+  show_powerup_unlock_toast_message: true
+sound:
+  #If true, a sound will play when you level up.
+  #Default value: true
+  play_level_up_sound: true
+  #The volume of the level up sound.
+  #Minimum value: 0.0, Maximum value: 1.0, Default value: 1.0
+  sound_volume: 1.0
+tooltips:
+  #Adds a tooltip to items indicating which Job/Level is required to use them.
+  #Default value: true
+  show_job_restriction_tooltip: true

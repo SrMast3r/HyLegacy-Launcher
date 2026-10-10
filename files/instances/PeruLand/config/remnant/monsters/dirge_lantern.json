@@ -1,0 +1,10 @@
+{
+  "armor": 2.0,
+  "special_damage": 7.0,
+  "attack_damage": 4.0,
+  "max_health": 28.0,
+  "movement_speed": 0.23,
+  "attack_cooldown_ticks": 55.0,
+  "special_range": 12.0,
+  "xp_reward": 8.0
+}

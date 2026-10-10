@@ -1,0 +1,10 @@
+{
+  "minion_health": 24.0,
+  "minion_attack_damage": 5.0,
+  "minion_movement_speed": 0.32,
+  "minion_armor": 2.0,
+  "poison_duration": 60.0,
+  "leap_cooldown": 80.0,
+  "trap_chance": 18.0,
+  "trap_cooldown": 160.0
+}

@@ -1,0 +1,16 @@
+{
+  "max_health": 750.0,
+  "attack_damage": 14.0,
+  "movement_speed": 0.32,
+  "armor": 10.0,
+  "follow_range": 48.0,
+  "orb_damage": 8.0,
+  "hp_threshold_phase_2": 40.0,
+  "attack_damage_phase_2": 18.0,
+  "movement_speed_phase_2": 0.38,
+  "bite_damage": 16.0,
+  "slam_damage": 18.0,
+  "tail_damage": 15.0,
+  "roar_damage": 8.0,
+  "roar_range": 16.0
+}

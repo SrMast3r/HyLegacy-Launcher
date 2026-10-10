@@ -1,0 +1,7 @@
+{
+  "portal_activation_item": "minecraft:echo_shard",
+  "pedestal_one_activation_block": "minecraft:amethyst_block",
+  "pedestal_two_activation_block": "minecraft:crying_obsidian",
+  "pedestal_three_activation_block": "minecraft:end_stone",
+  "pedestal_four_activation_block": "minecraft:sculk"
+}

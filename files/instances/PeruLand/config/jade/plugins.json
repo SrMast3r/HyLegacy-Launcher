@@ -85,5 +85,11 @@
   },
   "balm": {
     "jade": true
+  },
+  "securitycraft": {
+    "showowner": true,
+    "showmodules": true,
+    "info": true,
+    "showcustomname": true
   }
 }

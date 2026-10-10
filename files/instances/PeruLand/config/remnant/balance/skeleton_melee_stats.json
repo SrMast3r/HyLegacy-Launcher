@@ -1,0 +1,8 @@
+{
+  "max_health": 28.0,
+  "attack_damage": 6.0,
+  "heavy_damage": 8.0,
+  "movement_speed": 0.28,
+  "armor": 4.0,
+  "follow_range": 24.0
+}

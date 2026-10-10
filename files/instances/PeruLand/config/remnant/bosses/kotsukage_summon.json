@@ -1,0 +1,7 @@
+{
+  "portal_activation_item": "minecraft:wither_skeleton_skull",
+  "pedestal_one_activation_block": "minecraft:bone_block",
+  "pedestal_two_activation_block": "minecraft:soul_sand",
+  "pedestal_three_activation_block": "minecraft:soul_soil",
+  "pedestal_four_activation_block": "minecraft:nether_wart_block"
+}
