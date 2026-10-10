@@ -5,6 +5,7 @@
 import config from '../utils/config.js';
 import { database, logger, changePanel, appdata, setStatus, pkg, popup, getServerPlayerCount, getSkinHeadUrl } from '../utils.js';
 import { installPackwiz } from '../utils/packwiz.js';
+import { installMrpack } from '../utils/mrpack.js';
 
 const { Launch } = require('minecraft-java-core');
 const { ipcRenderer } = require('electron');
@@ -542,6 +543,44 @@ class Home {
                 box.style.display = 'none';
                 new popup().openPopup({
                     title: 'Error al actualizar mods',
+                    content: err?.message || String(err),
+                    color: 'red',
+                    options: true
+                });
+                return;
+            }
+            text.textContent = 'Preparando…';
+        }
+
+        // === mrpack: instancia = un .mrpack de Modrinth subido al servidor.
+        //     Los mods salen del CDN de Modrinth; el loader, del propio pack ===
+        if (options.mrpack_url) {
+            text.textContent = 'Actualizando modpack…';
+            try {
+                const res = await installMrpack({
+                    url: options.mrpack_url,
+                    sha1: options.mrpack_sha1,
+                    instancePath,
+                    cacheDir: `${opt.path}/mrpack`,
+                    onProgress: (msg, done, total) => {
+                        text.textContent = msg;
+                        if (total) { bar.max = total; bar.value = done; }
+                    }
+                });
+                if (res.loader) {
+                    const PL = readLoader({ loadder: res.loader });
+                    opt.version = PL.mc;
+                    opt.loader = { type: PL.type, build: PL.version, enable: PL.type !== 'none' };
+                }
+                writeLaunchLog(logBase, `mrpack OK: ${res.name || ''} ${res.version || ''}`);
+            } catch (err) {
+                console.error('[Home] mrpack error', err);
+                writeLaunchLog(logBase, `ERROR mrpack: ${err?.message || err}`);
+                btn.disabled = false;
+                btn.style.display = 'inline-flex';
+                box.style.display = 'none';
+                new popup().openPopup({
+                    title: 'Error al actualizar el modpack',
                     content: err?.message || String(err),
                     color: 'red',
                     options: true
