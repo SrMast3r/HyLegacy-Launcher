@@ -98,43 +98,64 @@ function offlineAccount(name) {
     };
 }
 
-async function addAccount(data) {
-    let skin = false;
-    if (data?.profile?.skins?.[0]?.base64) {
-        skin = await new skin2D().creatHeadTexture(data.profile.skins[0].base64);
+/**
+ * Cabeza (avatar) de la cuenta. Premium: se recorta de la skin que ya viene en
+ * el perfil (base64). Si no hay (cuentas offline o perfil sin skin), se pide a
+ * mc-heads.net por nick (offline) o por UUID (premium); devuelve Steve/Alex
+ * cuando ese nick no tiene skin propia.
+ */
+async function accountHead(data) {
+    const base64 = data?.profile?.skins?.[0]?.base64;
+    if (base64) {
+        try { return await new skin2D().creatHeadTexture(base64); } catch {}
     }
+    const id = data?.meta?.online === false ? data?.name : (data?.uuid || data?.name);
+    return id ? `https://mc-heads.net/avatar/${encodeURIComponent(id)}/64` : null;
+}
 
+async function addAccount(data) {
     const div = document.createElement('div');
     div.classList.add('account');
     div.id = data.ID;
     div.innerHTML = `
-    <div class="profile-image" ${skin ? 'style="background-image: url(' + skin + ');"' : ''}></div>
+    <div class="profile-image"></div>
     <div class="profile-infos">
-      <div class="profile-pseudo">${data.name}</div>
-      <div class="profile-uuid">${data.uuid}</div>
+      <div class="profile-pseudo"></div>
+      <div class="profile-uuid"></div>
     </div>
     <div class="delete-profile" id="${data.ID}">
       <div class="icon-account-delete delete-profile-icon"></div>
     </div>
   `;
-    return document.querySelector('.accounts-list')?.appendChild(div);
+    div.querySelector('.profile-pseudo').textContent = data.name ?? '';
+    div.querySelector('.profile-uuid').textContent = data.uuid ?? '';
+
+    // Si la cuenta ya tenía tarjeta (re-login), se reemplaza en vez de duplicarla
+    const list = document.querySelector('.accounts-list');
+    const old = list?.querySelector(`.account[id="${data.ID}"]`);
+    if (old) old.replaceWith(div);
+    else list?.appendChild(div);
+
+    const head = await accountHead(data);
+    if (head) div.querySelector('.profile-image').style.backgroundImage = `url("${head}")`;
+    return div;
 }
 
 async function accountSelect(data) {
+    if (!data || typeof data !== 'object') return;
     const account = document.getElementById(`${data.ID}`);
     const active = document.querySelector('.account-select');
     if (active) active.classList.toggle('account-select');
     if (account) account.classList.add('account-select');
 
-    if (data?.profile?.skins?.[0]?.base64) {
-        headplayer(data.profile.skins[0].base64);
-    }
-}
+    // Footer de Inicio y de Ajustes: nick + cabeza
+    document.querySelectorAll('.player-nick').forEach(el => { el.textContent = data.name || 'Jugador'; });
+    const head = await accountHead(data);
+    document.querySelectorAll('.player-head').forEach(el => {
+        el.style.backgroundImage = head ? `url("${head}")` : '';
+    });
 
-async function headplayer(skinBase64) {
-    const skin = await new skin2D().creatHeadTexture(skinBase64);
-    const el = document.querySelector('.player-head');
-    if (el) el.style.backgroundImage = `url(${skin})`;
+    document.dispatchEvent(new CustomEvent('hy:account-selected', { detail: { account: data } }));
 }
 
 /* =================== Estado del servidor (barra superior minimal) =================== */

@@ -206,9 +206,13 @@
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     gap: .8rem;
+    align-content: start;
     max-height: calc(100% - 70px);
     overflow: auto;
-    padding-right: .2rem;
+    /* respiro para que el glow de la cuenta seleccionada y el hover no se
+       corten contra el borde del contenedor con scroll */
+    padding: 18px 14px 20px;
+    margin: 0 -14px;
 }
 
 .account{
@@ -218,9 +222,10 @@
     height: 92px;
     padding: .6rem .8rem;
     display:flex; align-items:center; justify-content:space-between;
-    transition: border-color .14s ease, transform .14s ease;
+    cursor: pointer;
+    transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease;
 }
-.account:hover{ transform: translateY(-2px); border-color: var(--stroke-strong, rgba(170,255,200,.34)); }
+.account:hover{ border-color: var(--stroke-strong, rgba(170,255,200,.34)); background-color: rgba(46,219,110,.05); }
 
 .account-select{
     border-color: rgba(46,219,110,.7);
@@ -250,6 +255,7 @@
 .profile-image{
     width:64px; height:64px; border-radius: 12px;
     background: url(../../images/default/setve.png) center/cover no-repeat;
+    flex: 0 0 auto;
     image-rendering: pixelated;
     pointer-events: none;
     border:1px solid var(--stroke, rgba(170,255,200,.14));

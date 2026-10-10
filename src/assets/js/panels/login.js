@@ -210,6 +210,13 @@ export default class Login {
         }));
     }
 
+    /* ===================== Tras iniciar sesión → Instancias ===================== */
+    goToInstances() {
+        showView('.login-home');
+        document.dispatchEvent(new CustomEvent('hy:navigate-home', { detail: { pane: 'pane-instances' } }));
+        changePanel('home');
+    }
+
     /* ===================== Seleccionar cuenta ya guardada ===================== */
     async selectExisting(account) {
         const configClient = await this.db.readData('configClient');
@@ -217,8 +224,7 @@ export default class Login {
         await this.db.updateData('configClient', configClient);
         await accountSelect(account);
         this.pop.closePopup();
-        showView('.login-home');
-        changePanel('home');
+        this.goToInstances();
     }
 
     /* ===================== Guardar cuenta & navegar ===================== */
@@ -247,7 +253,6 @@ export default class Login {
         await this.db.updateData('configClient', configClient);
         await addAccount(account);
         await accountSelect(account);
-        showView('.login-home');
-        changePanel('home');
+        this.goToInstances();
     }
 }

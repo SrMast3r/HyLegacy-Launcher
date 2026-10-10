@@ -98,6 +98,16 @@ class Home {
                 else this.refreshHeroFromSelection();
             });
 
+            // Cambio de cuenta (login, añadir cuenta o selección en Ajustes):
+            // el nick decide la whitelist, así que se repintan hero y lista.
+            document.addEventListener('hy:account-selected', (e) => {
+                const acc = e.detail?.account;
+                this.playerName = acc?.name || acc?.username || acc?.profile?.name;
+                if (this.$.playerNick) this.$.playerNick.textContent = this.playerName || 'Jugador';
+                this.refreshHeroFromSelection();
+                if (!this.$.paneInstances?.hidden) this.refreshInstancesGrid();
+            });
+
             // Jugar desde el footer de Ajustes (dispara el mismo flujo de lanzamiento)
             document.addEventListener('hy:play-now', () => this.startGame());
 
@@ -250,7 +260,8 @@ class Home {
 
     renderHero(inst) {
         const src = this.getInstanceImage(inst);
-        if (this.$.instanceHero) this.$.instanceHero.style.backgroundImage = `url('${src}')`;
+        // La imagen se pinta completa (contain) sobre una copia difuminada (cover)
+        if (this.$.instanceHero) this.$.instanceHero.style.setProperty('--hero-img', `url("${src}")`);
         if (this.$.instanceHeroName) this.$.instanceHeroName.textContent = inst?.name ?? 'Instancia';
 
         const L = readLoader(inst);
@@ -312,7 +323,8 @@ class Home {
             card.dataset.name = inst.name;
 
             card.innerHTML = `
-                <div class="instance-card__bg" style="background-image:url('${this.getInstanceImage(inst)}')"></div>
+                <div class="instance-card__fill" style="--card-img:url('${this.getInstanceImage(inst)}')"></div>
+                <div class="instance-card__bg" style="--card-img:url('${this.getInstanceImage(inst)}')"></div>
                 <div class="instance-card__veil"></div>
                 <div class="instance-card__content">
                     <div class="instance-card__name">${this.escapeHTML(inst.name)}</div>
