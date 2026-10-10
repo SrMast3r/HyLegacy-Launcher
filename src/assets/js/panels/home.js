@@ -521,7 +521,9 @@ class Home {
 
         // === packwiz: instalar/actualizar mods desde Modrinth/CurseForge (CDN),
         //     no desde nuestro servidor, antes de que minecraft-java-core arranque ===
-        if (options.packwiz_url) {
+        // Si la instancia ya es un .mrpack, packwiz sobra (y su pack.toml
+        // puede haberse borrado del servidor): manda el .mrpack.
+        if (options.packwiz_url && !options.mrpack_url) {
             text.textContent = 'Actualizando mods…';
             try {
                 await installPackwiz({
