@@ -25,7 +25,8 @@ function readMrpackIndex($file) {
     $key = filesize($file) . '-' . filemtime($file);
     if (is_file($cache)) {
         $cached = json_decode(file_get_contents($cache), true);
-        if (($cached['key'] ?? null) === $key) return $cached;
+        // Una caché sin dependencies es de cuando faltaba php-zip: se rehace
+        if (($cached['key'] ?? null) === $key && (isset($cached['dependencies']) || !class_exists('ZipArchive'))) return $cached;
     }
 
     $info = array('key' => $key, 'sha1' => hash_file('sha1', $file));

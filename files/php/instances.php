@@ -1,16 +1,10 @@
 <?php
 
+// La versión de Minecraft, el loader y los mods salen del .mrpack de cada
+// carpeta (ver php/mrpack.php). Aquí solo va la imagen, el servidor y la whitelist.
 
 $instance['PeruLand'] = array_merge($instance['PeruLand'], array(
-    "loadder" => array(
-        "minecraft_version" => "1.21.1",
-        "loadder_type" => "fabric",
-        "loadder_version" => "0.19.3"
-    ),
     "image" => "https://i.imgur.com/djZ5pQS.jpeg",
-    "verify" => false,
-    "ignored" => array(),
-    "packwiz_url" => "https://launcher.hylegacy.com/files/instances/PeruLand/pack.toml",
     "whitelist" => array(),
     "whitelistActive" => false,
     "status" => array(
